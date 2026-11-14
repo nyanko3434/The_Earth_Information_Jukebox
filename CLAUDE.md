@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Earth Jukebox is a NASA Space Apps Challenge 2026 entry ("The Earth Information Jukebox") by a team of two. Submission deadline: **2026-11-15 23:59 local**.
 
-The app is a React + Vite + TypeScript + Tone.js static site, deployed to GitHub Pages at <https://nyanko3434.github.io/The_Earth_Information_Jukebox/>. It was scaffolded in BUILD_PLAN Step 0 and currently shows a placeholder page; `src/types.ts` holds the shared interfaces and nothing else is built yet. Check the latest entries in `docs/PROJECT_LOG.md` for where things stand.
+The app is a React + Vite + TypeScript + Tone.js static site, deployed to GitHub Pages at <https://nyanko3434.github.io/The_Earth_Information_Jukebox/>. BUILD_PLAN.md has a "Progress" line naming the current step, and the latest entries in `docs/PROJECT_LOG.md` say where things stand, including a handoff note for the next step. Read both at the start of a session.
 
 ## Commands
 
@@ -27,6 +27,13 @@ npm run lint     # oxlint, configured in .oxlintrc.json
 ```
 
 There is no test runner. Type errors surface through `npm run build`, not through `npm run lint`. Sound is judged by ear on the deployed site (see WORK_DIVISION.md).
+
+TypeScript settings from the template that reject otherwise ordinary code (`tsconfig.app.json`):
+
+- `verbatimModuleSyntax`: types must be imported with `import type`.
+- `erasableSyntaxOnly`: no `enum`, no `namespace`, no constructor parameter properties (`constructor(private x: number)`). Use union types and plain fields.
+- `noUnusedLocals` and `noUnusedParameters`: unused names fail the build, and so fail the deploy.
+- `allowImportingTsExtensions`: local imports carry the extension, as in `import App from './App.tsx'`.
 
 ## Docs
 
@@ -93,7 +100,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 
 ## Ownership and collaboration
 
-Work is split by path so two Claude Code sessions rarely touch the same files. Ask the user which role they hold before editing outside the area they are working in.
+Work is split by path so two Claude Code sessions rarely touch the same files. `docs/WORK_DIVISION.md` records who holds which role (A is `nyanko3434`); match it against the git user to know whose session this is, and ask if it is unclear. Stay inside that role's paths. If the task needs a change in the other role's area, say so and let the user raise it with their teammate; do not make the edit.
 
 - **A (Sound):** `src/analysis/`, `src/audio/`, `src/tracks/*/sonifier.ts` (except night lights, which B writes).
 - **B (Experience):** `src/components/`, `src/a11y/`, styling, `src/tracks/*/track.ts`, `public/media/`, deployment workflow, README and submission.

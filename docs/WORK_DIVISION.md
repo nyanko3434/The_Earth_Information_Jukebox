@@ -1,9 +1,9 @@
 # Earth Jukebox: Work Division
 
-Two teammates with equal skills and no audio background. The split is by area of the codebase so that two Claude Code sessions rarely touch the same files. Decide between yourselves who is A and who is B.
+Two teammates with equal skills and no audio background. The split is by area of the codebase so that two Claude Code sessions rarely touch the same files.
 
-- **A: Sound.** Turns frames into features and features into music.
-- **B: Experience.** Turns that into something a person can find, use and understand.
+- **A: Sound.** Turns frames into features and features into music. A is `nyanko3434`.
+- **B: Experience.** Turns that into something a person can find, use and understand. B is the other teammate.
 
 ## Ownership
 
