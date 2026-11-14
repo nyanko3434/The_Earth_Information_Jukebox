@@ -16,9 +16,9 @@
     -filter_complex "[1][2]overlay=x='(W-w)*t/6':y='(H-h)/2'[box];[0][box][3]concat=n=3:v=1:a=0,format=yuv420p" \
     -an -c:v libx264 -crf 23 -preset slow -movflags +faststart src/analysis/dev/standin.mp4
 
-  0-8 s    frame fades black -> white -> black   meanLuma 0 -> 1 -> 0, tone 110 -> 880 -> 110 Hz
-  8-14 s   white square crosses, left to right   motion above 0, meanLuma about 0.03
-  14-20 s  static colour bars                    motion 0, hue and sat per cell
+  0-8 s    frame fades black -> white -> black   meanLuma 0 -> 1 -> 0, tone 110 -> 880 -> 110 Hz, pan centre
+  8-14 s   white square crosses, left to right   motion above 0, meanLuma about 0.03, pan -0.85 -> +0.85
+  14-20 s  static colour bars                    motion 0, hue and sat per cell, pan about -0.3
 -->
 <html lang="en">
   <head>
@@ -57,6 +57,7 @@
         <dt>motion</dt><dd id="motion">-</dd>
         <dt>analysis rate</dt><dd id="rate">-</dd>
         <dt>tone</dt><dd id="tone">-</dd>
+        <dt>pan</dt><dd id="pan">-</dd>
       </dl>
 
       <div class="views">

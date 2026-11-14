@@ -1,7 +1,7 @@
 // Dev-only harness (see harness.html). Drives the pipeline through createEngine,
 // the same call the UI shell makes, and draws what the Analyser reports.
 import { createEngine } from '../../audio/engine.ts';
-import { createTestTone, testToneHz } from '../../audio/testTone.ts';
+import { createTestTone, testToneHz, testTonePan } from '../../audio/testTone.ts';
 import type { FrameFeatures } from '../../types.ts';
 
 const GRID = { cols: 64, rows: 32 };
@@ -20,6 +20,7 @@ const out = {
   motion: byId('motion'),
   rate: byId('rate'),
   tone: byId('tone'),
+  pan: byId('pan'),
 };
 
 // ---- The part the UI shell will repeat ----
@@ -86,6 +87,7 @@ engine.onFeatures((f) => {
   out.motion.textContent = f.motion.toFixed(4);
   out.rate.textContent = `${recentFrames.length} Hz`;
   out.tone.textContent = `${testToneHz(f.meanLuma).toFixed(0)} Hz`;
+  out.pan.textContent = `${testTonePan(f).toFixed(2)} (-1 left, +1 right)`;
   for (const draw of views) draw(f);
 });
 

@@ -68,6 +68,10 @@ Step 1 is done when, on the deployed site, pressing Play shows the video with a 
 - Checked in headless Chrome against the stand-in clip: `meanLuma` follows the sweep from 0 to 0.95 and back with the tone frequency tracking it; 20.0 analysed frames per second; the moving square appears in the expected columns and rows; the colour bars read grey, yellow, cyan, green, magenta, red, blue; output is silent about 65 ms after Pause, after `video.pause()` called directly, and at the end of the clip. `npm run lint` and `npm run build` pass, and `dist/` contains neither the harness nor the clip.
 - **Problem (harmless):** Chrome logs "The AudioContext was not allowed to start" at page load. Importing Tone creates its suspended context; `play()` resumes it. Noted in ARCHITECTURE.
 - Not yet done: listening by ear (the checks above measured the signal, nobody heard it), and Firefox.
+- 17:12 — Step 1, A: the test tone is now stereo. It was a single centred sine, so both speakers carried the same signal. A Tone `Panner` now places it at the horizontal centre of brightness of the frame (`testTonePan` in `src/audio/testTone.ts`); a nearly black frame pans to centre. The harness shows the pan value.
+- **Decision:** pan the test tone in Step 1 instead of waiting for the lightning sonifier, to prove that pan survives the master bus before Step 2 depends on it.
+- Checked in headless Chrome, left and right measured separately at the speaker output: equal during the full-frame fade (0.089 each); from left 0.124 / right 0.023 to left 0.026 / right 0.123 as the square crosses; steady at pan -0.32 on the colour bars; both silent within 150 ms of Pause. The master bus keeps stereo, so `master.ts` is unchanged. Lint and build pass. Still not heard by ear.
+- Note: a centred tone is now 3 dB quieter per speaker than before, because the panner keeps total power constant.
 
 ### Handoff: B's half of Step 1
 
@@ -77,6 +81,7 @@ A's half is ready to be called. What B needs:
 - In the shell: `const engine = createEngine({ video, track })` from `src/audio/engine.ts`, created in an effect whose cleanup calls `engine.dispose()`. Play button calls `engine.play()`, Pause calls `engine.pause()`.
 - The `<video>` must be self-hosted and should be `muted` and `playsInline`. Read play state from the video element, not from the engine.
 - A worked example of all of this is `src/analysis/dev/harness.ts`.
+- Listen on headphones when checking Step 1: the tone moves left and right with the bright part of the picture as well as changing pitch.
 - To agree: the sonifier lifecycle sentence above.
 
 Step 1 is done when the deployed site plays the lightning clip with a tone that follows the picture and pausing silences it.

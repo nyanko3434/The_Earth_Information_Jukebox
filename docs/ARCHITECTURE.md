@@ -146,7 +146,7 @@ const engine = createEngine({ video: videoRef.current, track }); // in an effect
 <button onClick={() => engine.pause()}>Pause</button>
 ```
 
-Until the lightning sonifier exists (Step 2), a track uses the test tone: `createSonifier: (output) => createTestTone(output)`, from `src/audio/testTone.ts`.
+Until the lightning sonifier exists (Step 2), a track uses the test tone: `createSonifier: (output) => createTestTone(output)`, from `src/audio/testTone.ts`. It is one sine: pitch follows `meanLuma`, and stereo position follows the horizontal centre of brightness, so something bright on the left of the picture is heard on the left.
 
 - The video element is the source of truth for play state. The engine keeps no `isPlaying`; read `video.paused` and the `play`, `pause` and `ended` events for button labels and the live region.
 - Sound follows the picture, not the button. The engine silences on the video's own `pause` and `ended` events, so native controls and the end of the clip behave. With no analysed frame for 250 ms (buffering, hidden tab) it also silences, and resumes with the next frame.
@@ -175,7 +175,7 @@ Until the lightning sonifier exists (Step 2), a track uses the test tone: `creat
 - Quantise every pitch to a scale (default: pentatonic). Helpers live in `src/audio/scales.ts`.
 - Smooth continuous values before they reach a synth parameter (exponential moving average, or `rampTo` over 100–300 ms).
 - Cap triggered notes at about 12 per second per track.
-- Everything goes through one master bus: light reverb, then a limiter. Default volume is conservative. (`src/audio/master.ts`; in Step 1 it is gain at -12 dB then a limiter, and the reverb arrives in Step 2.)
+- Everything goes through one master bus: light reverb, then a limiter. Default volume is conservative. (`src/audio/master.ts`; in Step 1 it is gain at -12 dB then a limiter, and the reverb arrives in Step 2.) The bus is stereo throughout: a source panned with a Tone `Panner` before the bus comes out panned at the speakers (measured on 2026-11-14). Anything added to the bus must keep two channels.
 - Map longitude to stereo pan and latitude to pitch where the frame is a flat world map, so position means the same thing in every track.
 - `pause()` must silence within 200 ms. No sound may continue while the picture is paused.
 - Sonifier lifecycle (proposed by A on 2026-11-14, awaiting B's agreement; no change to the types): `start()` is called once per sonifier; `pause()` silences but keeps the nodes; the next `update()` resumes the sound. The engine relies on this.
