@@ -28,6 +28,8 @@ npm run lint     # oxlint, configured in .oxlintrc.json
 
 There is no test runner. Type errors surface through `npm run build`, not through `npm run lint`. Sound is judged by ear on the deployed site (see WORK_DIVISION.md).
 
+To run the analysis and audio pipeline without the UI, start `npm run dev` and open the dev harness at `/The_Earth_Information_Jukebox/src/analysis/dev/harness.html`. It shows the live `FrameFeatures` and plays the test tone. It is not part of the build. Its stand-in clip (`src/analysis/dev/standin.mp4`) is git-ignored; the ffmpeg command that makes it is at the top of `harness.html`.
+
 TypeScript settings from the template that reject otherwise ordinary code (`tsconfig.app.json`):
 
 - `verbatimModuleSyntax`: types must be imported with `import type`.
@@ -61,6 +63,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 ```
 
 - A shared engine (`src/analysis/`, `src/audio/`) reads frames; each track under `src/tracks/<id>/` supplies its own `track.ts` (metadata) and `sonifier.ts` (mapping).
+- The UI starts and stops all of this through one call, `createEngine({ video, track })` in `src/audio/engine.ts`, which returns `play()`, `pause()`, `onFeatures()` and `dispose()` (ARCHITECTURE, "Engine API").
 - The UI reads the same `FrameFeatures` as the sonifier to drive the "what you're hearing" panel.
 - `src/types.ts` (`FrameFeatures`, `Sonifier`, `TrackDef`, `MediaDef`) is the only contract between the sound half and the UI half. Copy it exactly from ARCHITECTURE.md; derived values go in `src/analysis/helpers.ts`, not into `FrameFeatures`.
 - Tracks 1–3 (lightning, ocean, night lights) are videos. Track 4 (aerosols) is a stretch goal: a still image with a playhead sweeping left to right (`scanX`).
@@ -78,7 +81,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 - Start audio only from a user gesture (`await Tone.start()` in the Play handler).
 - Quantise every pitch to a scale (default pentatonic, `src/audio/scales.ts`), smooth continuous values (EMA or `rampTo` over 100–300 ms), and cap triggered notes at about 12 per second per track.
 - On flat world maps, longitude maps to stereo pan and latitude to pitch, in every track.
-- `pause()` must silence within 200 ms. No sound continues while the picture is paused.
+- `pause()` must silence within 200 ms. No sound continues while the picture is paused. A sonifier's `start()` runs once, `pause()` keeps its nodes, and the next `update()` resumes the sound.
 - Everything routes through the single master bus.
 
 ### Accessibility (applies from the first commit, never cut)

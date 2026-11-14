@@ -10,7 +10,7 @@ Two teammates with equal skills and no audio background. The split is by area of
 | Area | Owner |
 |---|---|
 | `src/analysis/` (FrameSource, Analyser, helpers) | A |
-| `src/audio/` (master bus, scales, synth helpers) | A |
+| `src/audio/` (engine, master bus, scales, synth helpers) | A |
 | `src/tracks/*/sonifier.ts` | A, except night lights (B on Day 2) |
 | `src/tracks/*/track.ts` (metadata, descriptions, ignore rectangles) | B |
 | `src/components/`, `src/a11y/`, styling | B |
@@ -39,7 +39,7 @@ B writes one sonifier on Day 2 so that both of you have worked on the sound, and
 
 ## How the two halves meet
 
-- The only contract between A and B is `src/types.ts`: `FrameFeatures`, `Sonifier`, `TrackDef`.
+- The contract between A and B is `src/types.ts` (`FrameFeatures`, `Sonifier`, `TrackDef`) plus one function, `createEngine` in `src/audio/engine.ts`, which B's shell calls to play and pause a track. Both are described in ARCHITECTURE.md.
 - Until A's real sonifier exists, B builds against a mock `TrackDef` whose sonifier does nothing.
 - A tests sonifiers on the deployed UI as soon as Step 1 is merged.
 
