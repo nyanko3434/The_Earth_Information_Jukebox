@@ -40,8 +40,16 @@ The UI reads the same `FrameFeatures` to update the "what you're hearing" panel.
 public/media/            self-hosted clips, posters, colorbars
 src/
   types.ts               shared interfaces (below)
-  analysis/              FrameSource, Analyser, helper functions
-  audio/                 master bus, scales, shared synth helpers
+  analysis/
+    frameSource.ts       video -> small canvas -> pixels, at about 20 Hz
+    analyser.ts          pixels -> FrameFeatures
+    helpers.ts           derived values (Step 2)
+    dev/                 dev-only harness page; never built or deployed
+  audio/
+    engine.ts            createEngine(): the one call the UI makes (see "Engine API")
+    master.ts            master bus
+    testTone.ts          Step 1 test tone (a Sonifier)
+    scales.ts            pitch quantising (Step 2)
   tracks/
     index.ts             list of TrackDef
     lightning/           track.ts (metadata) + sonifier.ts
@@ -112,11 +120,52 @@ Derived values live in `src/analysis/helpers.ts`, not in `FrameFeatures`, so the
 - `column(f, x)` returns the cells in one column (used for still-image sweeps).
 - `hueToValue(hue, colorbar)` maps a colour back to an approximate data value using the page's colorbar.
 
+## Engine API (`src/audio/engine.ts`)
+
+The UI never touches FrameSource, Analyser, the master bus or Tone directly. It makes one call per track:
+
+```ts
+export interface Engine {
+  play(): Promise<void>;  // call inside the Play click: unlocks audio, starts the sonifier, plays the video
+  pause(): void;          // pauses the video; sound is silent within 200 ms
+  onFeatures(cb: (f: FrameFeatures) => void): () => void; // every analysed frame; returns unsubscribe
+  dispose(): void;        // on track change or unmount
+}
+
+export function createEngine(opts: {
+  video: HTMLVideoElement;
+  track: Pick<TrackDef, 'grid' | 'ignore' | 'createSonifier'>;
+}): Engine;
+```
+
+In the shell:
+
+```tsx
+const engine = createEngine({ video: videoRef.current, track }); // in an effect; the cleanup calls engine.dispose()
+<button onClick={() => engine.play()}>Play</button>
+<button onClick={() => engine.pause()}>Pause</button>
+```
+
+Until the lightning sonifier exists (Step 2), a track uses the test tone: `createSonifier: (output) => createTestTone(output)`, from `src/audio/testTone.ts`. It is one sine: pitch follows `meanLuma`, and stereo position follows the horizontal centre of brightness, so something bright on the left of the picture is heard on the left.
+
+- The video element is the source of truth for play state. The engine keeps no `isPlaying`; read `video.paused` and the `play`, `pause` and `ended` events for button labels and the live region.
+- Sound follows the picture, not the button. The engine silences on the video's own `pause` and `ended` events, so native controls and the end of the clip behave. With no analysed frame for 250 ms (buffering, hidden tab) it also silences, and resumes with the next frame.
+- `onFeatures` fires only while the video is playing, including when audio has not been unlocked.
+- No audio node is built before the first `play()`. Chrome still logs "The AudioContext was not allowed to start" at page load, because importing Tone creates its suspended context; that is expected, and `play()` resumes it.
+- Video only for now. Still images (`scanX`) are added to the same function if Track 4 is built.
+
+### Dev harness
+
+`src/analysis/dev/harness.html` runs the pipeline through `createEngine` without the UI shell, and shows the features the Analyser reports. With `npm run dev` it is at <http://localhost:5173/The_Earth_Information_Jukebox/src/analysis/dev/harness.html>. It is not linked from `index.html`, so it is left out of the build. It loads `src/analysis/dev/standin.mp4`, a synthetic ffmpeg test clip that is git-ignored; the command to generate it is at the top of `harness.html`. Any other clip can be loaded with the page's file picker.
+
 ## Analysis rules
 
+- The analysis canvas is the track's `grid` multiplied by the largest whole number that keeps it within 96x48 (a 64x32 grid gives a 64x32 canvas; 32x16 gives 96x48). The Analyser averages each block of pixels into one cell. A grid larger than 96x48 is an error.
+- `hue` and `sat` are HSV, computed from the averaged RGB of the cell. `luma` uses Rec. 709 weights.
+- The first frame, and the first frame after a seek or loop, has `deltaLuma` all zero, so a jump in time is not read as a flash.
 - Draw frames to a canvas no larger than 96x48. Create the 2D context with `willReadFrequently: true`.
 - Use `requestVideoFrameCallback` where available, `requestAnimationFrame` otherwise. Throttle analysis to about 20 Hz.
-- Blank out `ignore` rectangles before computing features, or on-screen dates and colorbars will be turned into sound.
+- Blank out `ignore` rectangles before computing features, or on-screen dates and colorbars will be turned into sound. Blanked cells are black: luma 0, and they count as black in `meanLuma`.
 - Media must be served from our own origin. Reading pixels from a cross-origin video fails in the browser.
 - For still images, `scanX` advances from 0 to 1 over `scanSeconds`, and the UI draws a vertical line at that position.
 
@@ -126,9 +175,12 @@ Derived values live in `src/analysis/helpers.ts`, not in `FrameFeatures`, so the
 - Quantise every pitch to a scale (default: pentatonic). Helpers live in `src/audio/scales.ts`.
 - Smooth continuous values before they reach a synth parameter (exponential moving average, or `rampTo` over 100–300 ms).
 - Cap triggered notes at about 12 per second per track.
-- Everything goes through one master bus: light reverb, then a limiter. Default volume is conservative.
+- Everything goes through one master bus: light reverb, then a limiter. Default volume is conservative. (`src/audio/master.ts`; in Step 1 it is gain at -12 dB then a limiter, and the reverb arrives in Step 2.) The bus is stereo throughout: a source panned with a Tone `Panner` before the bus comes out panned at the speakers (measured on 2026-11-14). Anything added to the bus must keep two channels.
 - Map longitude to stereo pan and latitude to pitch where the frame is a flat world map, so position means the same thing in every track.
 - `pause()` must silence within 200 ms. No sound may continue while the picture is paused.
+- Sonifier lifecycle (proposed by A on 2026-11-14, awaiting B's agreement; no change to the types): `start()` is called once per sonifier; `pause()` silences but keeps the nodes; the next `update()` resumes the sound. The engine relies on this.
+- Schedule the silencing ramp in `pause()` at `Tone.immediate()`, not the default `Tone.now()`, which is 100 ms later.
+- The Step 1 test tone is the one exception to scale quantising: it is a diagnostic, and its pitch is continuous so that small brightness changes stay audible.
 
 ## Media preparation
 

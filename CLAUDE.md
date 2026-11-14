@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Earth Jukebox is a NASA Space Apps Challenge 2026 entry ("The Earth Information Jukebox") by a team of two. Submission deadline: **2026-11-15 23:59 local**.
 
-The app is a React + Vite + TypeScript + Tone.js static site, deployed to GitHub Pages at <https://nyanko3434.github.io/The_Earth_Information_Jukebox/>. It was scaffolded in BUILD_PLAN Step 0 and currently shows a placeholder page; `src/types.ts` holds the shared interfaces and nothing else is built yet. Check the latest entries in `docs/PROJECT_LOG.md` for where things stand.
+The app is a React + Vite + TypeScript + Tone.js static site, deployed to GitHub Pages at <https://nyanko3434.github.io/The_Earth_Information_Jukebox/>. BUILD_PLAN.md has a "Progress" line naming the current step, and the latest entries in `docs/PROJECT_LOG.md` say where things stand, including a handoff note for the next step. Read both at the start of a session.
 
 ## Commands
 
@@ -27,6 +27,15 @@ npm run lint     # oxlint, configured in .oxlintrc.json
 ```
 
 There is no test runner. Type errors surface through `npm run build`, not through `npm run lint`. Sound is judged by ear on the deployed site (see WORK_DIVISION.md).
+
+To run the analysis and audio pipeline without the UI, start `npm run dev` and open the dev harness at `/The_Earth_Information_Jukebox/src/analysis/dev/harness.html`. It shows the live `FrameFeatures` and plays the test tone. It is not part of the build. Its stand-in clip (`src/analysis/dev/standin.mp4`) is git-ignored; the ffmpeg command that makes it is at the top of `harness.html`.
+
+TypeScript settings from the template that reject otherwise ordinary code (`tsconfig.app.json`):
+
+- `verbatimModuleSyntax`: types must be imported with `import type`.
+- `erasableSyntaxOnly`: no `enum`, no `namespace`, no constructor parameter properties (`constructor(private x: number)`). Use union types and plain fields.
+- `noUnusedLocals` and `noUnusedParameters`: unused names fail the build, and so fail the deploy.
+- `allowImportingTsExtensions`: local imports carry the extension, as in `import App from './App.tsx'`.
 
 ## Docs
 
@@ -54,6 +63,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 ```
 
 - A shared engine (`src/analysis/`, `src/audio/`) reads frames; each track under `src/tracks/<id>/` supplies its own `track.ts` (metadata) and `sonifier.ts` (mapping).
+- The UI starts and stops all of this through one call, `createEngine({ video, track })` in `src/audio/engine.ts`, which returns `play()`, `pause()`, `onFeatures()` and `dispose()` (ARCHITECTURE, "Engine API").
 - The UI reads the same `FrameFeatures` as the sonifier to drive the "what you're hearing" panel.
 - `src/types.ts` (`FrameFeatures`, `Sonifier`, `TrackDef`, `MediaDef`) is the only contract between the sound half and the UI half. Copy it exactly from ARCHITECTURE.md; derived values go in `src/analysis/helpers.ts`, not into `FrameFeatures`.
 - Tracks 1–3 (lightning, ocean, night lights) are videos. Track 4 (aerosols) is a stretch goal: a still image with a playhead sweeping left to right (`scanX`).
@@ -71,7 +81,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 - Start audio only from a user gesture (`await Tone.start()` in the Play handler).
 - Quantise every pitch to a scale (default pentatonic, `src/audio/scales.ts`), smooth continuous values (EMA or `rampTo` over 100–300 ms), and cap triggered notes at about 12 per second per track.
 - On flat world maps, longitude maps to stereo pan and latitude to pitch, in every track.
-- `pause()` must silence within 200 ms. No sound continues while the picture is paused.
+- `pause()` must silence within 200 ms. No sound continues while the picture is paused. A sonifier's `start()` runs once, `pause()` keeps its nodes, and the next `update()` resumes the sound.
 - Everything routes through the single master bus.
 
 ### Accessibility (applies from the first commit, never cut)
@@ -93,7 +103,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 
 ## Ownership and collaboration
 
-Work is split by path so two Claude Code sessions rarely touch the same files. Ask the user which role they hold before editing outside the area they are working in.
+Work is split by path so two Claude Code sessions rarely touch the same files. `docs/WORK_DIVISION.md` records who holds which role (A is `nyanko3434`); match it against the git user to know whose session this is, and ask if it is unclear. Stay inside that role's paths. If the task needs a change in the other role's area, say so and let the user raise it with their teammate; do not make the edit.
 
 - **A (Sound):** `src/analysis/`, `src/audio/`, `src/tracks/*/sonifier.ts` (except night lights, which B writes).
 - **B (Experience):** `src/components/`, `src/a11y/`, styling, `src/tracks/*/track.ts`, `public/media/`, deployment workflow, README and submission.

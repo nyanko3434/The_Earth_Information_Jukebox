@@ -4,6 +4,8 @@ The order we build in, with a check at the end of each step. Times are working h
 
 **Before anything else:** confirm the exact submission deadline for our local event and write it here: `2026 Nov 15 11:59pm`.
 
+**Progress:** Step 0 finished on 2026-11-14 (public link live; teammate push access still to confirm). **Current step: Step 1.** A's half (FrameSource, Analyser, test tone, engine) is written and checked in the dev harness; B's half (lightning clip, UI shell, deploy) is outstanding. Update this line when a step is finished; details go in PROJECT_LOG.md.
+
 ## Day 1
 
 ### Step 0: Setup, together (about 45 min)

@@ -1,0 +1,71 @@
+<!doctype html>
+<!--
+  Dev-only harness for the analysis and audio pipeline. Not linked from
+  index.html, so `vite build` leaves it out and it is never deployed.
+
+  Open with `npm run dev` at:
+  http://localhost:5173/The_Earth_Information_Jukebox/src/analysis/dev/harness.html
+
+  It loads standin.mp4 from this folder (git-ignored). Generate it from the repo root:
+
+  ffmpeg -y \
+    -f lavfi -i "color=c=white:s=640x320:r=30:d=8,fade=t=in:st=0:d=4,fade=t=out:st=4:d=4" \
+    -f lavfi -i "color=c=black:s=640x320:r=30:d=6" \
+    -f lavfi -i "color=c=white:s=80x80:r=30:d=6" \
+    -f lavfi -i "smptebars=s=640x320:r=30:d=6" \
+    -filter_complex "[1][2]overlay=x='(W-w)*t/6':y='(H-h)/2'[box];[0][box][3]concat=n=3:v=1:a=0,format=yuv420p" \
+    -an -c:v libx264 -crf 23 -preset slow -movflags +faststart src/analysis/dev/standin.mp4
+
+  0-8 s    frame fades black -> white -> black   meanLuma 0 -> 1 -> 0, tone 110 -> 880 -> 110 Hz, pan centre
+  8-14 s   white square crosses, left to right   motion above 0, meanLuma about 0.03, pan -0.85 -> +0.85
+  14-20 s  static colour bars                    motion 0, hue and sat per cell, pan about -0.3
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pipeline harness (dev only)</title>
+    <style>
+      body { font: 16px/1.5 system-ui, sans-serif; margin: 1rem auto; max-width: 62rem; padding: 0 1rem; color: #111; background: #fff; }
+      h1 { font-size: 1.25rem; }
+      video { display: block; width: 100%; max-width: 40rem; background: #000; }
+      .controls { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin: 0.75rem 0; }
+      button { font: inherit; padding: 0.4rem 1rem; }
+      dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.1rem 1rem; font-family: ui-monospace, monospace; }
+      dd { margin: 0; }
+      .views { display: flex; flex-wrap: wrap; gap: 1rem; }
+      figure { margin: 0; }
+      canvas { display: block; width: 19rem; image-rendering: pixelated; border: 1px solid #666; }
+      #message { color: #a00000; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Pipeline harness (dev only)</h1>
+      <video id="video" muted playsinline preload="auto" controls aria-label="Clip under analysis"></video>
+      <div class="controls">
+        <button id="play" type="button">Play</button>
+        <button id="pause" type="button">Pause</button>
+        <label><input id="loop" type="checkbox" /> Loop</label>
+        <label>Load another clip <input id="file" type="file" accept="video/*" /></label>
+      </div>
+      <p id="message" role="status"></p>
+
+      <dl>
+        <dt>time</dt><dd id="time">-</dd>
+        <dt>meanLuma</dt><dd id="meanLuma">-</dd>
+        <dt>motion</dt><dd id="motion">-</dd>
+        <dt>analysis rate</dt><dd id="rate">-</dd>
+        <dt>tone</dt><dd id="tone">-</dd>
+        <dt>pan</dt><dd id="pan">-</dd>
+      </dl>
+
+      <div class="views">
+        <figure><canvas id="viewLuma"></canvas><figcaption>luma</figcaption></figure>
+        <figure><canvas id="viewColour"></canvas><figcaption>hue and sat (full brightness)</figcaption></figure>
+        <figure><canvas id="viewDelta"></canvas><figcaption>|deltaLuma| x4</figcaption></figure>
+      </div>
+    </main>
+    <script type="module" src="./harness.ts"></script>
+  </body>
+</html>
