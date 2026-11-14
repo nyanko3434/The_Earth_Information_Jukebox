@@ -7,6 +7,7 @@ The technical contract for both teammates and for Claude Code sessions. Read VIS
 | Concern | Choice | Note |
 |---|---|---|
 | App | React + Vite + TypeScript | TypeScript is here so the shared interfaces below are enforced. Switch to plain JS only if both agree. |
+| Tooling | npm, Node 26, oxlint | oxlint is the linter the Vite template now ships with. No test runner. |
 | Audio | Tone.js (Web Audio API) | Synths, effects, scheduling |
 | Frame analysis | `<video>` or `<img>` drawn to a small hidden `<canvas>`, read with `getImageData` | No computer-vision library needed |
 | Media prep | ffmpeg, run once on a laptop | Not part of the app |
@@ -35,6 +36,7 @@ The UI reads the same `FrameFeatures` to update the "what you're hearing" panel.
 ## Folder layout
 
 ```
+.github/workflows/       deploy.yml (build and deploy to GitHub Pages)
 public/media/            self-hosted clips, posters, colorbars
 src/
   types.ts               shared interfaces (below)
@@ -171,6 +173,8 @@ Space Apps requires AI-generated code to be acknowledged in descriptive text and
 
 ## Deployment
 
-- GitHub Pages via a GitHub Actions workflow on push to `main`.
-- Set `base` in `vite.config.ts` to `'/<repo-name>/'` and build media URLs from `import.meta.env.BASE_URL`.
+- GitHub Pages via a GitHub Actions workflow (`.github/workflows/deploy.yml`) on push to `main`. It can also be run by hand from the Actions tab.
+- The repo's Pages source must be set to "GitHub Actions" (Settings → Pages), or the deploy job fails.
+- `base` in `vite.config.ts` is `'/The_Earth_Information_Jukebox/'`. Build media URLs from `import.meta.env.BASE_URL`.
+- Public URL: <https://nyanko3434.github.io/The_Earth_Information_Jukebox/>
 - Deploy a placeholder page in the first hour so the public link exists from the start.
