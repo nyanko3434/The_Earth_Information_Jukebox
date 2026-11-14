@@ -1,0 +1,142 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createEngine } from '../audio/engine.ts'
+import type { Engine } from '../audio/engine.ts'
+import type { TrackDef } from '../types.ts'
+import { Announcer } from '../a11y/Announcer.tsx'
+import { Player } from './Player.tsx'
+import { TrackList } from './TrackList.tsx'
+
+interface JukeboxProps {
+  tracks: TrackDef[]
+}
+
+const DESCRIPTION_ID = 'track-description'
+
+export function Jukebox({ tracks }: JukeboxProps) {
+  const [selectedId, setSelectedId] = useState(tracks[0]?.id ?? '')
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [message, setMessage] = useState('')
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const engineRef = useRef<Engine | null>(null)
+
+  const track = tracks.find((candidate) => candidate.id === selectedId) ?? tracks[0]
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !track) return
+
+    const engine = createEngine({ video, track })
+    engineRef.current = engine
+    setIsPlaying(false)
+
+    const syncPlayState = () => {
+      const playing = !video.paused && !video.ended
+      setIsPlaying(playing)
+      setMessage(`${track.title}: ${playing ? 'playing' : 'paused'}`)
+    }
+
+    video.addEventListener('play', syncPlayState)
+    video.addEventListener('pause', syncPlayState)
+    video.addEventListener('ended', syncPlayState)
+
+    return () => {
+      video.removeEventListener('play', syncPlayState)
+      video.removeEventListener('pause', syncPlayState)
+      video.removeEventListener('ended', syncPlayState)
+      engine.dispose()
+      engineRef.current = null
+    }
+  }, [track])
+
+  const toggle = useCallback(() => {
+    const engine = engineRef.current
+    const video = videoRef.current
+    if (!engine || !video) return
+    if (video.paused || video.ended) {
+      if (video.ended) video.currentTime = 0
+      engine.play().catch(() => {})
+    } else {
+      engine.pause()
+    }
+  }, [])
+
+  const select = useCallback(
+    (id: string) => {
+      if (id === selectedId) return
+      engineRef.current?.pause()
+      setSelectedId(id)
+      const next = tracks.find((candidate) => candidate.id === id)
+      if (next) setMessage(`Track changed to ${next.title}`)
+    },
+    [selectedId, tracks],
+  )
+
+  const step = useCallback(
+    (direction: number) => {
+      const index = tracks.findIndex((candidate) => candidate.id === selectedId)
+      const next = tracks[(index + direction + tracks.length) % tracks.length]
+      if (next) select(next.id)
+    },
+    [selectedId, tracks, select],
+  )
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return
+      const target = event.target as HTMLElement | null
+      const tag = target?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) {
+        return
+      }
+
+      if (event.key === ' ' || event.code === 'Space') {
+        if (tag === 'BUTTON' || tag === 'A') return
+        event.preventDefault()
+        toggle()
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        step(-1)
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        step(1)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [step, toggle])
+
+  if (!track) return null
+
+  return (
+    <section aria-label="Jukebox">
+      <TrackList tracks={tracks} selectedId={track.id} onSelect={select} />
+
+      <section aria-labelledby="track-heading">
+        <h2 id="track-heading">{track.title}</h2>
+        <Player
+          track={track}
+          videoRef={videoRef}
+          isPlaying={isPlaying}
+          onToggle={toggle}
+          descriptionId={DESCRIPTION_ID}
+        />
+        <p id={DESCRIPTION_ID}>{track.description}</p>
+        <h3>Listen for</h3>
+        <ul className="listen-for">
+          {track.listenFor.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+        <p className="credit">{track.credit}</p>
+        <p>
+          <a href={track.sourceUrl} target="_blank" rel="noreferrer">
+            Source: NASA Scientific Visualization Studio
+          </a>
+        </p>
+      </section>
+
+      <Announcer message={message} />
+    </section>
+  )
+}
