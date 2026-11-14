@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Working rules for Claude Code
+
+- **Do not create commits.** Never run `git commit`, `git push` or anything else that writes history. When a piece of work reaches a sensible commit point, say so, list the files involved, and suggest a commit message; the user makes the commit. The suggested message must end with the `Co-Authored-By: Claude` trailer (see "Submission constraints").
+- **Keep the docs current.** If a change makes anything in `docs/` or this file untrue or incomplete — stack, folder layout, interfaces, rules, plan, scope, ownership, resource lists, commands — update that doc in the same piece of work, not later.
+- **Log the work.** Append an entry to `docs/PROJECT_LOG.md` whenever work is finished, a decision is made, scope is cut, or a plan changes. The format is described at the top of that file.
+
 ## State of the repo
 
 Earth Jukebox is a NASA Space Apps Challenge 2026 entry ("The Earth Information Jukebox") by a team of two. Submission deadline: **2026-11-15 23:59 local**.
@@ -11,12 +17,13 @@ As of this writing the repo contains only planning docs under `docs/` — no `pa
 `docs/` is the source of truth. Read `docs/ARCHITECTURE.md` before writing code; it is the technical contract between the two teammates and their Claude Code sessions.
 
 | Doc | Use it for |
-|---|---|
+| --- | --- |
 | `docs/VISION.md` | What the product is, the four tracks and their mappings, scope and out-of-scope |
 | `docs/ARCHITECTURE.md` | Stack, folder layout, shared interfaces, analysis/audio/a11y rules, ffmpeg recipes, deployment |
 | `docs/BUILD_PLAN.md` | Build order with a "done when" check per step, feature freeze, and the order in which to cut scope |
 | `docs/WORK_DIVISION.md` | Which teammate owns which paths |
 | `docs/SUBMISSION.md` | Submission form fields, resource lists, AI-use rules |
+| `docs/PROJECT_LOG.md` | Dated record of work done, decisions and changes; read the latest entries to see where the project stands |
 
 ## What is being built
 
@@ -24,7 +31,7 @@ A web jukebox: the visitor picks a NASA Earth Information Center visualization a
 
 Pipeline (one direction, no backend):
 
-```
+```text
 media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) -> master bus (reverb -> limiter)
                           tiny canvas    FrameFeatures   Tone.js notes/params
                           (~64x32)       at ~20 Hz
@@ -37,30 +44,35 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 
 ## Rules that are easy to break
 
-Analysis
+### Analysis
+
 - Media must be self-hosted under `public/media/`. Reading pixels from a cross-origin video fails.
 - Analysis canvas is at most 96x48, with the 2D context created with `willReadFrequently: true`. Throttle to about 20 Hz (`requestVideoFrameCallback`, falling back to `requestAnimationFrame`).
 - Blank each track's `ignore` rectangles before computing features, or on-screen dates and colorbars become sound.
 
-Audio
+### Audio
+
 - Start audio only from a user gesture (`await Tone.start()` in the Play handler).
 - Quantise every pitch to a scale (default pentatonic, `src/audio/scales.ts`), smooth continuous values (EMA or `rampTo` over 100–300 ms), and cap triggered notes at about 12 per second per track.
 - On flat world maps, longitude maps to stereo pan and latitude to pitch, in every track.
 - `pause()` must silence within 200 ms. No sound continues while the picture is paused.
 - Everything routes through the single master bus.
 
-Accessibility (applies from the first commit, never cut)
+### Accessibility (applies from the first commit, never cut)
+
 - Semantic HTML, an accessible name on every control, a text alternative for the video.
 - Keyboard: Tab reaches everything, Space toggles play, Left/Right change track, visible focus ring.
 - One `aria-live="polite"` region for track changes and play state — never per-frame announcements.
 - The audio legend is a list of buttons that each play one sound and name its meaning.
 - WCAG AA contrast, respect `prefers-reduced-motion`, nothing conveyed by colour alone.
 
-Deployment
+### Deployment
+
 - GitHub Pages via a GitHub Actions workflow on push to `main`; `main` always deploys.
 - Set Vite `base` to `'/<repo-name>/'` and build media URLs from `import.meta.env.BASE_URL`.
 
-Media prep
+### Media prep
+
 - ffmpeg is run once by hand, not by the app. Always transcode to H.264, strip audio, target under 10 MB per clip. Recipes are in ARCHITECTURE.md.
 
 ## Ownership and collaboration
@@ -75,7 +87,7 @@ Branches are short-lived and merged to `main` several times a day.
 
 ## Submission constraints that affect code and commits
 
-- Keep the `Co-Authored-By: Claude` trailer on commits made with Claude Code; Space Apps requires AI-generated code to be acknowledged in metadata.
+- Commits containing Claude-written code carry the `Co-Authored-By: Claude` trailer; Space Apps requires AI-generated code to be acknowledged in metadata. Since the user makes the commits, include the trailer in every suggested commit message.
 - The README needs a "Use of AI tools" section, a mapping table, and credits. The app's About section must state that the sound is synthesised by the project's own rules at run time, not by a generative AI model.
 - No NASA logo, insignia or other NASA branding anywhere in the app, repo or demo. No AI-generated images or video.
 - Each track records its SVS source URL and credit line (as given on the SVS page) in `track.ts`, and the app shows both.
