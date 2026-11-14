@@ -12,7 +12,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Earth Jukebox is a NASA Space Apps Challenge 2026 entry ("The Earth Information Jukebox") by a team of two. Submission deadline: **2026-11-15 23:59 local**.
 
-As of this writing the repo contains only planning docs under `docs/` — no `package.json`, no `src/`, no build, lint or test commands. The planned stack is React + Vite + TypeScript + Tone.js, deployed as a static site to GitHub Pages. When the app is scaffolded (BUILD_PLAN Step 0), add the real commands to this file.
+The app is a React + Vite + TypeScript + Tone.js static site, deployed to GitHub Pages at <https://nyanko3434.github.io/The_Earth_Information_Jukebox/>. It was scaffolded in BUILD_PLAN Step 0 and currently shows a placeholder page; `src/types.ts` holds the shared interfaces and nothing else is built yet. Check the latest entries in `docs/PROJECT_LOG.md` for where things stand.
+
+## Commands
+
+Package manager is npm (Node 26 locally and in CI).
+
+```bash
+npm install      # after cloning or pulling a dependency change
+npm run dev      # dev server, served under /The_Earth_Information_Jukebox/
+npm run build    # tsc -b (type-check) then vite build to dist/
+npm run preview  # serve dist/ locally
+npm run lint     # oxlint, configured in .oxlintrc.json
+```
+
+There is no test runner. Type errors surface through `npm run build`, not through `npm run lint`. Sound is judged by ear on the deployed site (see WORK_DIVISION.md).
+
+## Docs
 
 `docs/` is the source of truth. Read `docs/ARCHITECTURE.md` before writing code; it is the technical contract between the two teammates and their Claude Code sessions.
 
@@ -68,8 +84,8 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 
 ### Deployment
 
-- GitHub Pages via a GitHub Actions workflow on push to `main`; `main` always deploys.
-- Set Vite `base` to `'/<repo-name>/'` and build media URLs from `import.meta.env.BASE_URL`.
+- `.github/workflows/deploy.yml` builds and deploys to GitHub Pages on every push to `main`; `main` always deploys. Work happens on `dev` or short-lived branches.
+- Vite `base` is `'/The_Earth_Information_Jukebox/'`. Build media URLs from `import.meta.env.BASE_URL`; a bare `/media/...` path works in neither dev nor production.
 
 ### Media prep
 

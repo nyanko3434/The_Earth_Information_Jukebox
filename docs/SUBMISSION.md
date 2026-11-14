@@ -11,7 +11,7 @@ Everything the Space Apps submission form asks for, and what we need to have rea
 | Project Name | A title that describes the project | Open. The form currently shows "Project Cosmic inflation"; decide whether that stays or becomes something that says what the project does. | [ ] |
 | Summary | 50–200 words suggested, 1500 characters max: what we built, how it addresses the challenge, why it matters | Write on Day 2 from what actually shipped | [ ] |
 | Project Demonstration | Public link to a video of 30 seconds or less, or slides of 7 or fewer. Exceeding either limit loses Global Award eligibility. | 30-second video, since the project is sound | [ ] |
-| Project | Public link, no login | Deployed site URL. Put the repo link in the README and the Details text. | [ ] |
+| Project | Public link, no login | Deployed site URL: `https://nyanko3434.github.io/The_Earth_Information_Jukebox/`. Put the repo link in the README and the Details text. | [ ] |
 | Project Details | How it works, benefits, intended impact, tools and languages, creativity, factors considered | Adapt from VISION.md and the README mapping table | [ ] |
 | Use of SI | Select every AI use that applies. Not shown to judges, but AI indicators in the project are. | See "AI use" below | [ ] |
 | NASA Data | Name and full URL of every NASA resource used. Required for Global Award eligibility. | See list below | [ ] |
@@ -49,9 +49,12 @@ List only what we actually use in the final project.
 
 | Link text | URL | Used |
 |---|---|---|
-| Tone.js | https://tonejs.github.io/ | [ ] |
-| React | https://react.dev/ | [ ] |
-| Vite | https://vite.dev/ | [ ] |
+| Tone.js | https://tonejs.github.io/ | [x] |
+| React | https://react.dev/ | [x] |
+| Vite | https://vite.dev/ | [x] |
+| TypeScript | https://www.typescriptlang.org/ | [x] |
+| Oxlint (linter) | https://oxc.rs/ | [x] |
+| GitHub Pages and GitHub Actions (hosting and deploy) | https://pages.github.com/ | [x] |
 | FFmpeg | https://ffmpeg.org/ | [ ] |
 | Any font, icon set or other asset | add here | [ ] |
 
