@@ -2,7 +2,7 @@
 
 Everything the Space Apps submission form asks for, and what we need to have ready for each field. Fill this in as we go so Step 7 of the build plan is mostly copy and paste.
 
-**Deadline (local event):** `__________` — confirm on Day 1. Aim to submit one hour early.
+**Deadline (local event):** `2026 Nov 15 11:59pm` — confirm on Day 1. Aim to submit one hour early.
 
 ## Form fields
 

@@ -2,7 +2,7 @@
 
 The order we build in, with a check at the end of each step. Times are working hours, based on about 6 hours per person per day. Who does what is in WORK_DIVISION.md.
 
-**Before anything else:** confirm the exact submission deadline for our local event and write it here: `__________`.
+**Before anything else:** confirm the exact submission deadline for our local event and write it here: `2026 Nov 15 11:59pm`.
 
 ## Day 1
 
