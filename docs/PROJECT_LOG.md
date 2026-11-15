@@ -143,6 +143,8 @@ A's entries from Step 2 on. A adds new entries at the end of this section, above
 - 16:05 — A `git fetch` at the end of this work found that `origin/dev` had moved 11 commits while it was being done (it was level with `a/legends` at 12:13): B's `Jukebox` and `Player` shell, `public/media/lightning.mp4` and its poster, the lightning and ocean `track.ts` wired to the real sonifiers, and a night lights sonifier (its `legend` is empty). A new branch, `origin/b/step5-nowhearing`, adds `NowHearing.tsx` and a `Legend.tsx` that takes `items: LegendItem[]` and calls `item.play()` inside the click; it is not mounted anywhere yet, and it fits `engine.legend` as it is.
 - Trial merge of this work with `origin/dev`, made in a scratch folder without touching the branch: no conflicts, `oxlint` and the build pass. In headless Chrome with the normal autoplay policy, B's shell on the changed engine played and paused all three tracks with no error in the page log. In the harness on the real lightning clip (`?clip=media/lightning.mp4&sonifier=lightning`), a legend press paused the picture, played the 880 Hz example and was silent after the hold.
 - Note for the lightning tuning (not done here): on the first 12 s of the real clip the sonifier played 30 notes, 2.5 a second, at most 10 in one second, across the whole pitch range, and none louder than 0.9. That was with no `ignore` rectangle, which the harness does not apply for lightning.
+- 17:07 — A: the legend work is committed (`2d69f14`), `origin/dev` is merged into `a/legends` and that is merged into `dev` (`c11e232`), pushed. `oxlint` and the type-check pass on `dev`. `main` is two commits behind `dev`; a pull request from `dev` to `main` carries the legend work, and is where B agrees to `engine.legend`. The deployed site does not change until B mounts its Legend component (`b/step5-nowhearing`, not yet in `dev`).
+- **Decision:** the freeze has to be at about 21:00: BUILD_PLAN says to submit by 22:59, and Steps 7 and 8 need about 1 h 45 min.
 
 ### Handoff: A's next session
 
@@ -152,16 +154,16 @@ What exists on A's side:
 
 - `src/analysis/`: `frameSource.ts`, `analyser.ts`, `helpers.ts` (`findFlashes`, `hueToValue`, `regionValue`), and the dev harness in `dev/`.
 - `src/audio/`: `engine.ts` (`createEngine`, the one call the UI makes; it also carries `legend`), `master.ts` (gain, reverb, duck, limiter), `scales.ts`, `testTone.ts`.
-- `src/tracks/lightning/sonifier.ts`: written, with six legend sounds; checked on the synthetic `flashes.mp4`, and not yet tuned on the real clip, which is now in `origin/dev`.
+- `src/tracks/lightning/sonifier.ts`: written, with six legend sounds; checked on the synthetic `flashes.mp4`, and not yet tuned on the real clip, which is now in `dev`.
 - `src/tracks/ocean/sonifier.ts`: written, with three legend sounds; checked on the real clip and on the synthetic `oceantest.mp4`; the track sound has been listened to by A.
-- The legend work is on branch `a/legends` until it is merged into `dev`.
+- The legend work is in `dev` (`c11e232`) and goes to `main` by pull request. New work starts on a new branch cut from `dev`: `a/lightning-tuning`.
 
 What A still owes, in the order to do it:
 
-1. **Merge `origin/dev` into `a/legends`** (a trial merge was clean and built), then commit the legend work.
+1. **Get the pull request from `dev` to `main` merged**, then check on the deployed site that all three tracks still play and pause.
 2. **Listen to the legend sounds** in the harness (`?clip=media/ocean.mp4&sonifier=ocean`, and `?clip=flashes.mp4&sonifier=lightning`), before Play and while the clip plays. Check "Moving water" first.
 3. **Ocean track:** B listens, and a check on laptop speakers (the tropical voices, and the "Warm water" example, are as low as 110 Hz).
-4. **Lightning (Step 2):** tune the constants at the top of the sonifier on the real clip (`?clip=media/lightning.mp4&sonifier=lightning` once `origin/dev` is merged), and listen to it. The harness applies no `ignore` rectangle for lightning yet.
+4. **Lightning (Step 2):** tune the constants at the top of the sonifier on the real clip (`?clip=media/lightning.mp4&sonifier=lightning`), and listen to it. The harness applies no `ignore` rectangle for lightning yet.
 5. **Step 6:** volume balance across tracks, audio bugs, Chrome and Firefox. Feature freeze is at the end of Step 6. **Step 7:** the mapping table and technical write-up for the README (B leads the README).
 
 Not code, still open:
@@ -170,7 +172,7 @@ Not code, still open:
 - `docs/PICTURE_TO_SOUND.md` is the draft of the README's mapping table and technical write-up (Step 7); the night lights section is empty until B writes that sonifier.
 - Two things in ARCHITECTURE are marked as awaiting B's agreement: the sonifier lifecycle sentence, and `engine.legend`.
 - To raise with B:
-  - `engine.legend` (ARCHITECTURE, "Legend"): agree to the added member. B's `Legend.tsx` on `b/step5-nowhearing` already fits it: mount it in `Jukebox.tsx` with `items={engine.legend}`. `Jukebox` keeps the engine only in a ref today; it also has to go into state, or the list will not render.
+  - `engine.legend` (ARCHITECTURE, "Legend"): agree to the added member. B's `Legend.tsx` on `b/step5-nowhearing` already fits it: merge `origin/dev` into that branch, then mount it in `Jukebox.tsx` with `items={engine.legend}`. `Jukebox` keeps the engine only in a ref today; it also has to go into state, or the list will not render.
   - A legend press pauses the picture, so `Jukebox`'s own `pause` listener announces "paused" at that moment; anything `Legend`'s `onPlay` announces lands on top of it, and speech over a 0.5 to 1.6 s example may hide the example.
   - The night lights sonifier's `legend` is empty. Its items must follow the legend rules in ARCHITECTURE ("Audio rules"); the lightning sonifier is the closest model.
   - The ocean track's pitch exception; the per-teammate progress line in BUILD_PLAN.
