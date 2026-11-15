@@ -7,7 +7,7 @@ import { Legend } from './Legend.tsx'
 import { NowHearing } from './NowHearing.tsx'
 import { Player } from './Player.tsx'
 import { RegionPicker } from './RegionPicker.tsx'
-import { CUSTOM_REGION, REGION_PRESETS, regionPhrase } from './regions.ts'
+import { CUSTOM_REGION, MIN_SQUARE_WIDTH, REGION_PRESETS, regionPhrase } from './regions.ts'
 import type { RegionPreset } from './regions.ts'
 import { TrackList } from './TrackList.tsx'
 
@@ -188,6 +188,7 @@ export function Jukebox({ tracks }: JukeboxProps) {
           squareOn={squareOn}
           onSquareToggle={toggleSquare}
           onSquareChange={moveSquare}
+          minSquareWidth={MIN_SQUARE_WIDTH[track.id] ?? 0}
         />
         <NowHearing text={hearing} />
         <p id={DESCRIPTION_ID}>{track.description}</p>

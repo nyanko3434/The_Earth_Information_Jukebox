@@ -16,17 +16,14 @@ interface PlayerProps {
   onSquareToggle: (rect: Rect | null) => void
   /** The square has moved or changed size. Called on every pointer move while it is on. */
   onSquareChange: (rect: Rect) => void
+  /** The square is never narrower than this fraction of the picture's width. 0 for no such limit. */
+  minSquareWidth: number
 }
 
 /** The square's side as a fraction of the picture's height, when first turned on. */
-const START_SIDE = 0.5
-/** Smallest side, as a fraction of the picture's height. */
-const MIN_SIDE = 0.3
-/**
- * The square is also never narrower than this fraction of the picture's width:
- * under 0.15 the night lights sonifier takes a masked area for a zoomed view.
- */
-const MIN_WIDTH = 0.16
+const START_SIDE = 0.4
+/** Smallest side, as a fraction of the picture's height: about five rows of a 32-row grid. */
+const MIN_SIDE = 0.15
 /** One notch of the wheel changes the side by this factor. */
 const WHEEL_STEP = 1.1
 /** A press and release within this many pixels is a click; farther is a drag. */
@@ -45,6 +42,7 @@ export function Player({
   squareOn,
   onSquareToggle,
   onSquareChange,
+  minSquareWidth,
 }: PlayerProps) {
   const poster = track.media.kind === 'video' ? track.media.poster : undefined
   const pictureRef = useRef<HTMLDivElement>(null)
@@ -60,7 +58,7 @@ export function Player({
     if (!box || box.width === 0 || box.height === 0) return null
     const aspect = box.width / box.height
     const largest = Math.min(1, aspect)
-    const smallest = Math.min(largest, Math.max(MIN_SIDE, MIN_WIDTH * aspect))
+    const smallest = Math.min(largest, Math.max(MIN_SIDE, minSquareWidth * aspect))
     const h = clamp(sideRef.current, smallest, largest)
     sideRef.current = h
     const w = h / aspect
@@ -127,9 +125,9 @@ export function Player({
     }
     picture.addEventListener('wheel', onWheel, { passive: false })
     return () => picture.removeEventListener('wheel', onWheel)
-    // squareRect reads only refs, so it need not be a dependency.
+    // squareRect reads only refs and minSquareWidth.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [squareOn, onSquareChange])
+  }, [squareOn, onSquareChange, minSquareWidth])
 
   return (
     <div className="player">
