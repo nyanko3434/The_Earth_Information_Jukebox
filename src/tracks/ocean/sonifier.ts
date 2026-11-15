@@ -87,6 +87,27 @@ const FADE_SECONDS = 0.05;
 /** A gap in media time longer than this, or any step backwards, is a seek or a loop. */
 const MAX_FRAME_GAP_SECONDS = 1;
 
+// ---- Legend. One voice plays one example: a colorbar position, with or
+// without the shimmer, through the same mapping as the six voices. Not yet
+// judged by ear. ----
+/** The warm end of the pitch range (A2, where the tropics sit) and the coldest any region of the clip gets (E5). */
+const LEGEND_WARM = WARMEST;
+const LEGEND_COLD = 0.26;
+/** "Moving water" is a mild note (E4) with the shimmer at full strength. */
+const LEGEND_MILD = 0.5;
+/** An example swells in, holds and fades: 1.55 s in all. */
+const LEGEND_ATTACK_SECONDS = 0.15;
+const LEGEND_HOLD_SECONDS = 1;
+const LEGEND_RELEASE_SECONDS = 0.4;
+/** An example still sounding is faded out this quickly when another one starts. */
+const LEGEND_CUT_SECONDS = 0.03;
+const LEGEND_LEVEL = 1;
+const LEGEND_EXAMPLES = [
+  { id: 'warm', label: 'Warm water', warmth: LEGEND_WARM, moving: false },
+  { id: 'cold', label: 'Cold water', warmth: LEGEND_COLD, moving: false },
+  { id: 'moving', label: 'Moving water', warmth: LEGEND_MILD, moving: true },
+];
+
 interface Region {
   id: string;
   /** For describeNow, to follow "in". */
@@ -190,6 +211,51 @@ function coverageGain(coverage: number): number {
   return coverage < MIN_COVERAGE ? 0 : Math.min(1, Math.sqrt(coverage / FULL_COVERAGE));
 }
 
+// Fullness, for a warmth unit of 0 (cold) to 1 (warm). Shared by the six voices and the legend.
+function padLevel(unit: number): number {
+  return COLD_LEVEL + (WARM_LEVEL - COLD_LEVEL) * unit;
+}
+
+function padCutoff(hz: number, unit: number): number {
+  return hz * (COLD_BRIGHTNESS + (WARM_BRIGHTNESS - COLD_BRIGHTNESS) * unit);
+}
+
+function padSpread(unit: number): number {
+  return COLD_SPREAD_CENTS + (WARM_SPREAD_CENTS - COLD_SPREAD_CENTS) * unit;
+}
+
+/** The legend's voice: the same chain as one of the six, with its own envelope and its own way to the output. */
+interface LegendVoice {
+  osc: FatOscillator;
+  filter: Filter;
+  level: Gain;
+  shimmerOsc: Oscillator;
+  shimmerLevel: Gain;
+  tremolo: Gain;
+  lfo: LFO;
+  envelope: Gain;
+  panner: Panner;
+  out: Gain;
+}
+
+function buildLegendVoice(output: ToneAudioNode): LegendVoice {
+  const hz = oceanHz(LEGEND_MILD);
+  const out = new Gain(LEGEND_LEVEL).connect(output);
+  // Centred, through a panner like the six voices, so the level per speaker is comparable.
+  const panner = new Panner(0).connect(out);
+  const envelope = new Gain(0).connect(panner);
+  const level = new Gain(0).connect(envelope);
+  const filter = new Filter({ type: 'lowpass', frequency: hz * 2, rolloff: -24, Q: 0.5 }).connect(level);
+  const osc = new FatOscillator({ frequency: hz, type: 'sawtooth', count: 3, spread: COLD_SPREAD_CENTS })
+    .connect(filter)
+    .start();
+  const tremolo = new Gain(0).connect(envelope);
+  const shimmerLevel = new Gain(0).connect(tremolo);
+  const shimmerOsc = new Oscillator({ frequency: shimmerHz(hz), type: 'sine' }).connect(shimmerLevel).start();
+  const lfo = new LFO(5.5, 0.1, 1).connect(tremolo.gain).start();
+  return { osc, filter, level, shimmerOsc, shimmerLevel, tremolo, lfo, envelope, panner, out };
+}
+
 /** One reading of every region straight from a frame, unsmoothed. */
 function readRegions(f: FrameFeatures) {
   return REGIONS.map((region) => ({ region, ...regionValue(f, region.rect, OCEAN_COLORBAR, WATER) }));
@@ -210,8 +276,7 @@ export function createOceanSonifier(output: ToneAudioNode, options: OceanOptions
       const t = t0 + v.region.zone * STAGGER_SECONDS;
       // A region with no water keeps its old note; it is silent anyway.
       const hz = v.coverage < MIN_COVERAGE ? v.hz : oceanHz(v.warmth);
-      const unit = warmthUnit(v.warmth);
-      v.osc.spread = COLD_SPREAD_CENTS + (WARM_SPREAD_CENTS - COLD_SPREAD_CENTS) * unit;
+      v.osc.spread = padSpread(warmthUnit(v.warmth));
       if (fresh) {
         v.swell.gain.cancelScheduledValues(t0);
         v.swell.gain.setValueAtTime(0, t0);
@@ -239,8 +304,8 @@ export function createOceanSonifier(output: ToneAudioNode, options: OceanOptions
   const follow = (v: Voice, snap: boolean) => {
     const unit = warmthUnit(v.warmth);
     const cover = coverageGain(v.coverage);
-    const level = (COLD_LEVEL + (WARM_LEVEL - COLD_LEVEL) * unit) * cover;
-    const cutoff = v.hz * (COLD_BRIGHTNESS + (WARM_BRIGHTNESS - COLD_BRIGHTNESS) * unit);
+    const level = padLevel(unit) * cover;
+    const cutoff = padCutoff(v.hz, unit);
     const shimmer = SHIMMER_LEVEL * shimmerAmount(v.motion) * cover;
     const seconds = snap ? 0.01 : PARAM_SECONDS;
     // Skip changes too small to hear, so 20 frames a second do not mean 20
@@ -261,8 +326,37 @@ export function createOceanSonifier(output: ToneAudioNode, options: OceanOptions
     }
   };
 
+  // Built the first time a legend button is pressed.
+  let legendVoice: LegendVoice | null = null;
+
+  const playExample = (warmth: number, moving: boolean) => {
+    legendVoice ??= buildLegendVoice(output);
+    const v = legendVoice;
+    const hz = oceanHz(warmth);
+    const unit = warmthUnit(warmth);
+    // An example that is still sounding is faded out first, so the new note does not start with a jump.
+    const cut = now();
+    const t = cut + LEGEND_CUT_SECONDS;
+    v.envelope.gain.cancelAndHoldAtTime(cut);
+    v.envelope.gain.linearRampToValueAtTime(0, t);
+    v.osc.spread = padSpread(unit);
+    v.osc.frequency.setValueAtTime(hz, t);
+    v.filter.frequency.setValueAtTime(padCutoff(hz, unit), t);
+    v.level.gain.setValueAtTime(padLevel(unit), t);
+    v.shimmerOsc.frequency.setValueAtTime(shimmerHz(hz), t);
+    v.shimmerLevel.gain.setValueAtTime(moving ? SHIMMER_LEVEL : 0, t);
+    const held = t + LEGEND_ATTACK_SECONDS;
+    v.envelope.gain.linearRampToValueAtTime(1, held);
+    v.envelope.gain.setValueAtTime(1, held + LEGEND_HOLD_SECONDS);
+    v.envelope.gain.linearRampToValueAtTime(0, held + LEGEND_HOLD_SECONDS + LEGEND_RELEASE_SECONDS);
+  };
+
   return {
-    legend: [],
+    legend: LEGEND_EXAMPLES.map(({ id, label, warmth, moving }) => ({
+      id,
+      label,
+      play: () => playExample(warmth, moving),
+    })),
 
     start() {
       if (out) return;
@@ -369,26 +463,33 @@ export function createOceanSonifier(output: ToneAudioNode, options: OceanOptions
     },
 
     dispose() {
-      if (!out) return;
-      const nodes = [
-        out,
-        ...voices.flatMap((v) => [
-          v.osc,
-          v.filter,
-          v.level,
-          v.shimmerOsc,
-          v.shimmerLevel,
-          v.tremolo,
-          v.lfo,
-          v.swell,
-          v.panner,
-        ]),
-      ];
-      out.gain.rampTo(0, FADE_SECONDS, immediate());
-      out = null;
-      voices = [];
-      silent = true;
-      hasFrame = false;
+      const nodes: ToneAudioNode[] = [];
+      if (legendVoice) {
+        legendVoice.out.gain.rampTo(0, FADE_SECONDS, immediate());
+        nodes.push(...Object.values(legendVoice));
+        legendVoice = null;
+      }
+      if (out) {
+        out.gain.rampTo(0, FADE_SECONDS, immediate());
+        nodes.push(
+          out,
+          ...voices.flatMap((v) => [
+            v.osc,
+            v.filter,
+            v.level,
+            v.shimmerOsc,
+            v.shimmerLevel,
+            v.tremolo,
+            v.lfo,
+            v.swell,
+            v.panner,
+          ]),
+        );
+        out = null;
+        voices = [];
+        silent = true;
+        hasFrame = false;
+      }
       // Let the fade finish before the nodes go, to avoid a click.
       setTimeout(() => nodes.forEach((n) => n.dispose()), 2 * FADE_SECONDS * 1000);
     },

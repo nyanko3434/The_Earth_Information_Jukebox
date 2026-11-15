@@ -1,6 +1,6 @@
 // Dev-only harness (see harness.html). Drives the pipeline through createEngine,
 // the same call the UI shell makes, and draws what the Analyser reports.
-import { Analyser as LevelAnalyser, Split, getDestination } from 'tone';
+import { Analyser as LevelAnalyser, Split, getContext, getDestination } from 'tone';
 import { createEngine } from '../../audio/engine.ts';
 import type { Engine } from '../../audio/engine.ts';
 import { createTestTone, testToneHz, testTonePan } from '../../audio/testTone.ts';
@@ -19,6 +19,8 @@ declare global {
     harnessOcean: { last: OceanUpdate | null; strikes: OceanUpdate[] };
     /** RMS at the speakers, [left, right], over the last `samples` samples (2048, about 46 ms, at most). Zeros before the first Play button press. */
     harnessLevels: (samples?: number) => [number, number];
+    /** The last 2048 samples at each speaker, for measuring pitch. Null before the first button press. */
+    harnessWave: () => { sampleRate: number; left: number[]; right: number[] } | null;
   }
 }
 
@@ -34,6 +36,7 @@ const params = new URLSearchParams(location.search);
 const video = byId<HTMLVideoElement>('video');
 const message = byId('message');
 const sonifierSelect = byId<HTMLSelectElement>('sonifier');
+const legendList = byId('legend');
 const out = {
   time: byId('time'),
   meanLuma: byId('meanLuma'),
@@ -158,11 +161,23 @@ window.harnessLevels = (samples = 2048) => {
   return meters ? [rms(meters[0]), rms(meters[1])] : [0, 0];
 };
 
+window.harnessWave = () =>
+  meters && {
+    sampleRate: getContext().sampleRate,
+    left: Array.from(meters[0].getValue() as Float32Array),
+    right: Array.from(meters[1].getValue() as Float32Array),
+  };
+
+// On a timer, not per frame, so a legend sound shows while the picture is paused.
+window.setInterval(() => {
+  const [left, right] = window.harnessLevels();
+  out.level.textContent = `left ${left.toFixed(3)}, right ${right.toFixed(3)}`;
+}, 100);
+
 function onFeatures(f: FrameFeatures) {
   const now = performance.now();
   recentFrames.push(now);
   const isTone = sonifierSelect.value === 'tone';
-  const [left, right] = window.harnessLevels();
 
   out.time.textContent = `${f.time.toFixed(2)} s`;
   out.meanLuma.textContent = f.meanLuma.toFixed(3);
@@ -172,7 +187,6 @@ function onFeatures(f: FrameFeatures) {
   out.pan.textContent = isTone ? `${testTonePan(f).toFixed(2)} (-1 left, +1 right)` : '-';
   out.noteRate.textContent = isTone ? '-' : String(countRecent(recentNotes, now));
   out.describe.textContent = sonifier?.describeNow?.(f) ?? '-';
-  out.level.textContent = `left ${left.toFixed(3)}, right ${right.toFixed(3)}`;
   for (const draw of views) draw(f);
 }
 
@@ -206,6 +220,27 @@ function buildEngine() {
     },
   });
   engine.onFeatures(onFeatures);
+  showLegend(engine);
+}
+
+/** The legend as the shell will show it: one button per item, calling play() inside the click. */
+function showLegend(from: Engine) {
+  legendList.replaceChildren(
+    ...from.legend.map((item) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = item.label;
+      button.dataset.legend = item.id;
+      button.addEventListener('click', () => {
+        buildMeters();
+        item.play();
+      });
+      const li = document.createElement('li');
+      li.append(button);
+      return li;
+    }),
+  );
+  if (from.legend.length === 0) legendList.textContent = 'This sonifier has no legend.';
 }
 
 function play() {

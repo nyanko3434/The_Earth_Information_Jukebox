@@ -28,6 +28,7 @@ The app watches the video the way a person would, but very coarsely: about 20 ti
 - **Only notes from one musical scale are used** (a pentatonic scale, five notes per octave). Any two of those notes sound fine together, so the result is music and not noise.
 - **Nothing jumps.** Values are smoothed, and there is a limit of about 12 new notes per second.
 - **Sound follows the picture.** Pausing silences it within a fifth of a second. Jumping to another point in the video plays what is there.
+- **Each track has a legend.** It is a row of buttons, and each one plays a single example and names what it means. A legend button works before Play has been pressed. If the picture is playing, pressing one pauses it, so the example is heard on its own. The examples are made by the same rules as the track, so a legend sound is exactly what that thing sounds like when the picture plays.
 
 ## Track 1: Lightning
 
@@ -42,6 +43,17 @@ The picture is a world map on which lightning appears as sudden bright spots. Th
 | Many flashes at once | At most about 10 notes a second, the biggest flashes first | "In a storm you hear the strongest strikes, not a blur." |
 
 A flash that keeps glowing for a moment is still one note, not several. A spot that fades makes no sound; only getting brighter counts.
+
+**Legend.** Six buttons, one pluck each:
+
+| Button | What it plays |
+| --- | --- |
+| Lightning in the north | A high note, in the middle |
+| Lightning in the south | A low note, in the middle |
+| Lightning in the west | A middle note in the left ear |
+| Lightning in the east | The same note in the right ear |
+| A small flash | The middle note, quiet |
+| A big flash | The middle note, loud |
 
 ## Track 2: Sea surface currents and temperature
 
@@ -67,6 +79,14 @@ For each region the app looks only at the water (grey land is skipped), finds it
 | How much the currents are moving in the region | A high, fluttering shimmer on top of that voice's note | "The shimmer is moving water." |
 
 Every 4 seconds the chord is played again: each voice dips, slides to its new note if the water has changed, and swells back, north first, then the tropics, then the south. Notes change only at those moments, which is why it sounds like slow chords and not a siren.
+
+**Legend.** Three buttons, each a single voice that swells in, holds for a second and fades:
+
+| Button | What it plays |
+| --- | --- |
+| Warm water | A low, full note, the one the tropics hold |
+| Cold water | A high, thin note, as cold as any region of this clip gets |
+| Moving water | A note in between, with the shimmer at its strongest on top |
 
 **What you hear in this clip.** The clip covers one year. The two tropical voices stay low the whole time, because the tropics stay warm. The two northern voices start high (northern winter), sink as the north warms towards summer in the middle of the clip, and climb back. The two southern voices do the opposite, because the seasons are reversed there. The shimmer is steady and a little stronger in the tropics, because the currents in the picture move at a steady rate.
 
