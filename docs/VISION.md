@@ -38,7 +38,7 @@ Every step works with a keyboard and a screen reader.
 
 | # | Track | Source | What we read from the frames | What you hear |
 |---|---|---|---|---|
-| 1 | Lightning from the ISS | Video, [SVS 5011](https://svs.gsfc.nasa.gov/5011/) | Sudden bright flashes and where they are | Short plucked notes: pitch from latitude, left/right position from longitude, loudness from flash size |
+| 1 | Lightning from the ISS | Video, [SVS 5011](https://svs.gsfc.nasa.gov/5011/) | Sudden bright flashes and where they are | Short plucked notes: pitch from height in the picture (north is up), left/right from position in the picture, loudness from flash size. The clip is a turning globe, not a flat map |
 | 2 | Sea surface currents and temperature | Video, [SVS 3912](https://svs.gsfc.nasa.gov/3912/) | Colour (temperature) per region, amount of movement | Slow chords: warm water is lower and fuller, cold water is higher and thinner, movement adds shimmer |
 | 3 | Night lights 2012–2023 | Video, [SVS 5313](https://svs.gsfc.nasa.gov/5313/) | Brightness and how it changes | A pattern of notes that gets denser and faster as the map gets brighter |
 | 4 (stretch) | GEOS aerosols | Still image, [SVS 5669](https://svs.gsfc.nasa.gov/5669/) | Four colours: sea salt (blue), dust (pink), smoke (orange/red), sulfates (green) | A playhead sweeps across the map; each aerosol type is its own instrument |

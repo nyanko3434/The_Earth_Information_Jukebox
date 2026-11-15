@@ -8,7 +8,7 @@ The app watches the video the way a person would, but very coarsely: about 20 ti
 
 ## From picture to sound, step by step
 
-1. **Shrink the frame.** The current video frame is drawn onto a hidden canvas 64 squares wide and 32 tall. That is 2,048 squares for the whole world map, so one square covers a large patch of the Earth.
+1. **Shrink the frame.** The current video frame is drawn onto a hidden canvas 64 squares wide and 32 tall. That is 2,048 squares for the whole picture, so one square covers a large patch of the Earth.
 2. **Cover what is not the map.** Anything printed on top of the picture, such as a colour bar or a date, is painted black first, so it cannot turn into sound.
 3. **Measure each square.** Four numbers per square:
 
@@ -24,7 +24,7 @@ The app watches the video the way a person would, but very coarsely: about 20 ti
 
 ## Rules shared by every track
 
-- **Left and right in the picture are left and right in your ears.** On a world map that means west is in the left ear and east is in the right.
+- **Left and right in the picture are left and right in your ears.** On a flat world map (the ocean and night lights tracks) that means west is in the left ear and east is in the right. The lightning picture is a globe, so there it is simply left and right.
 - **Only notes from one musical scale are used** (a pentatonic scale, five notes per octave). Any two of those notes sound fine together, so the result is music and not noise.
 - **Nothing jumps.** Values are smoothed, and there is a limit of about 12 new notes per second.
 - **Sound follows the picture.** Pausing silences it within a fifth of a second. Jumping to another point in the video plays what is there.
@@ -32,17 +32,21 @@ The app watches the video the way a person would, but very coarsely: about 20 ti
 
 ## Track 1: Lightning
 
-The picture is a world map on which lightning appears as sudden bright spots. The app looks for squares that have just become much brighter. Each new flash plays one short plucked note.
+The picture is the Earth seen from space, turning slowly, with north at the top (South-East Asia at the start of the clip, Africa at the end). Lightning appears as small yellow dots that light up and fade within about a second. The app looks for squares that have just become more yellow. Each new flash plays one short plucked note.
+
+It listens for yellow, not for brightness, because the picture also has a white line (the orbit of the International Space Station), a white "ISS" label, sunlit clouds and stars. Those are bright but not yellow, so they make no sound.
 
 | In the picture | In the sound | How to say it |
 | --- | --- | --- |
-| A square suddenly gets brighter | One short plucked note | "Every pluck is a new flash of lightning." |
-| How far up the map the flash is | Pitch: higher up is a higher note (C3 to C6) | "High notes are in the north, low notes in the south." |
-| How far left or right it is | Which ear: left side of the map in the left ear | "Flashes over the Americas are on your left, Asia on your right." |
-| How big and bright the jump is | Loudness | "A louder pluck is a bigger flash." |
+| A square suddenly gets more yellow | One short plucked note | "Every pluck is a new flash of lightning." |
+| How far up the picture the flash is | Pitch: higher up is a higher note (C3 to C6) | "High notes are further north, low notes further south." |
+| How far left or right it is | Which ear. Lightning only appears in the middle half of this picture, so that part is spread across the full width between your ears | "A flash on the left of the picture is in your left ear, one on the right in your right ear." |
+| How big the jump in yellow is | Loudness | "A louder pluck is a bigger flash." |
 | Many flashes at once | At most about 10 notes a second, the biggest flashes first | "In a storm you hear the strongest strikes, not a blur." |
 
-A flash that keeps glowing for a moment is still one note, not several. A spot that fades makes no sound; only getting brighter counts.
+A flash that keeps glowing for a moment is still one note, not several: a square that has just sounded, and the squares around it, stay quiet for one second. A dot that fades makes no sound; only getting more yellow counts.
+
+**What you hear in this clip.** About four plucks a second, never more than nine, starting one second in. Left and right are the left and right of the picture, not west and east on a world map: as the Earth turns, the same storm drifts from one ear towards the other.
 
 **Legend.** Six buttons, one pluck each:
 
@@ -50,8 +54,8 @@ A flash that keeps glowing for a moment is still one note, not several. A spot t
 | --- | --- |
 | Lightning in the north | A high note, in the middle |
 | Lightning in the south | A low note, in the middle |
-| Lightning in the west | A middle note in the left ear |
-| Lightning in the east | The same note in the right ear |
+| Lightning on the left of the picture | A middle note in the left ear |
+| Lightning on the right of the picture | The same note in the right ear |
 | A small flash | The middle note, quiet |
 | A big flash | The middle note, loud |
 
@@ -111,6 +115,16 @@ The change map in this clip is mostly orange, so falling tones dominate that sec
 
 **What you hear in this clip.** The annual averages are sparse and calm, a few notes a second. When the change map arrives the map is brighter and more colourful, so the notes come faster and the falling tones appear. Each zoom into a city region answers with a quick rising phrase.
 
+**Legend.** Five buttons:
+
+| Button | What it plays |
+| --- | --- |
+| A light in the north | One short high note |
+| A light in the south | One short low note |
+| A region that lost light | A note that falls |
+| A region that gained light | A note that rises |
+| A zoomed-in view | Three quick rising notes |
+
 **One difference from the other two.** This track has no single voice that holds a note: it is a pulse of short notes, and the overall brightness sets the pulse's speed.
 
 ## What it does not do
@@ -121,4 +135,4 @@ The change map in this clip is mostly orange, so falling tones dominate that sec
 
 ## If you have 30 seconds
 
-"We shrink each video frame to a tiny grid and measure brightness, colour and change in every square, twenty times a second. Then simple rules turn that into music. For lightning, every new flash is a plucked note: higher on the map is a higher note, left on the map is your left ear, a bigger flash is louder. For the ocean, six slow voices cover six parts of the map: warm water is low and full, cold water is high and thin, and moving currents add a shimmer. Over the clip you can hear the north warm up and cool down again while the south does the opposite. It is all made live in the browser from the picture itself."
+"We shrink each video frame to a tiny grid and measure brightness, colour and change in every square, twenty times a second. Then simple rules turn that into music. For lightning, every new flash is a plucked note: higher in the picture is a higher note, left in the picture is your left ear, a bigger flash is louder. For the ocean, six slow voices cover six parts of the map: warm water is low and full, cold water is high and thin, and moving currents add a shimmer. Over the clip you can hear the north warm up and cool down again while the south does the opposite. It is all made live in the browser from the picture itself."

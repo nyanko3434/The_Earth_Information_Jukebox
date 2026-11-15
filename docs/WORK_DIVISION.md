@@ -2,6 +2,8 @@
 
 Two teammates with equal skills and no audio background. The split is by area of the codebase so that two Claude Code sessions rarely touch the same files.
 
+**From 2026-11-15 at about 18:50, A works alone.** B had other commitments for the rest of the hackathon, so A now owns every path below, including B's, and does B's remaining steps (Legend UI, Step 6 checks, README, demo video, the form). The split below describes how the work was divided until then.
+
 - **A: Sound.** Turns frames into features and features into music. A is `nyanko3434`.
 - **B: Experience.** Turns that into something a person can find, use and understand. B is the other teammate.
 

@@ -82,7 +82,8 @@ const PAN = 0.6;
  * phase; a few cents apart they drift slowly instead. Too little to hear as pitch.
  */
 const VOICE_DETUNE_CENTS = 1.5;
-const LEVEL = 1;
+/** Six sustained voices are far louder than the other tracks' plucks; set by the volume balance of 2026-11-15. */
+const LEVEL = 0.63;
 const FADE_SECONDS = 0.05;
 /** A gap in media time longer than this, or any step backwards, is a seek or a loop. */
 const MAX_FRAME_GAP_SECONDS = 1;
@@ -101,7 +102,8 @@ const LEGEND_HOLD_SECONDS = 1;
 const LEGEND_RELEASE_SECONDS = 0.4;
 /** An example still sounding is faded out this quickly when another one starts. */
 const LEGEND_CUT_SECONDS = 0.03;
-const LEGEND_LEVEL = 1;
+/** The same level as the track, so an example is as loud as that voice is when the picture plays. */
+const LEGEND_LEVEL = LEVEL;
 const LEGEND_EXAMPLES = [
   { id: 'warm', label: 'Warm water', warmth: LEGEND_WARM, moving: false },
   { id: 'cold', label: 'Cold water', warmth: LEGEND_COLD, moving: false },

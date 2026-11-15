@@ -65,7 +65,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 ```
 
 - A shared engine (`src/analysis/`, `src/audio/`) reads frames; each track under `src/tracks/<id>/` supplies its own `track.ts` (metadata) and `sonifier.ts` (mapping).
-- The UI starts and stops all of this through one call, `createEngine({ video, track })` in `src/audio/engine.ts`, which returns `play()`, `pause()`, `onFeatures()`, `dispose()` and `legend`, the list the Legend component renders (ARCHITECTURE, "Engine API" and "Legend").
+- The UI starts and stops all of this through one call, `createEngine({ video, track })` in `src/audio/engine.ts`, which returns `play()`, `pause()`, `onFeatures()`, `describeNow()`, `dispose()` and `legend`, the list the Legend component renders (ARCHITECTURE, "Engine API" and "Legend").
 - The UI reads the same `FrameFeatures` as the sonifier to drive the "what you're hearing" panel.
 - `src/types.ts` (`FrameFeatures`, `Sonifier`, `TrackDef`, `MediaDef`) is the only contract between the sound half and the UI half. Copy it exactly from ARCHITECTURE.md; derived values go in `src/analysis/helpers.ts`, not into `FrameFeatures`.
 - Tracks 1–3 (lightning, ocean, night lights) are videos. Track 4 (aerosols) is a stretch goal: a still image with a playhead sweeping left to right (`scanX`).
@@ -104,6 +104,8 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 - ffmpeg is run once by hand, not by the app. Always transcode to H.264, strip audio, target under 10 MB per clip. Recipes are in ARCHITECTURE.md.
 
 ## Ownership and collaboration
+
+**From 2026-11-15 at about 18:50 A (`nyanko3434`) works alone and owns every path**, including B's below; B is no longer available. The rest of this section describes the split until then, and its rule against editing the other role's paths no longer applies.
 
 Work is split by path so two Claude Code sessions rarely touch the same files. `docs/WORK_DIVISION.md` records who holds which role (A is `nyanko3434`); match it against the git user to know whose session this is, and ask if it is unclear. Stay inside that role's paths. If the task needs a change in the other role's area, say so and let the user raise it with their teammate; do not make the edit.
 

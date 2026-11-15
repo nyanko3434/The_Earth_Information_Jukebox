@@ -138,6 +138,24 @@ button[aria-current='true'] {
   background: #000;
 }
 
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.legend li {
+  margin: 0;
+}
+
+/* Room for two lines, so the page below does not jump as the sentence changes. */
+.now-hearing p {
+  min-height: 3.2em;
+}
+
 .credit {
   font-size: 0.9rem;
 }

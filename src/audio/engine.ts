@@ -23,6 +23,12 @@ export interface Engine {
   pause(): void;
   /** Called with every analysed frame while the video plays. Returns an unsubscribe function. */
   onFeatures(cb: (f: FrameFeatures) => void): () => void;
+  /**
+   * One short sentence on what a frame sounds like, from the track's sonifier,
+   * for the "what you are hearing" panel. Pass a frame from `onFeatures`, at
+   * most a few times a second. Undefined if the track has no such sentence.
+   */
+  describeNow(f: FrameFeatures): string | undefined;
   /** Call on track change or unmount. The engine cannot be used afterwards. */
   dispose(): void;
   /**
@@ -135,6 +141,10 @@ export function createEngine({ video, track }: EngineOptions): Engine {
     pause() {
       silence();
       video.pause();
+    },
+
+    describeNow(f) {
+      return disposed ? undefined : sonifier.describeNow?.(f);
     },
 
     onFeatures(cb) {
