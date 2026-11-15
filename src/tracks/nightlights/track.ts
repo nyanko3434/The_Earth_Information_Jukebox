@@ -17,9 +17,11 @@ export const nightlightsTrack: TrackDef = {
   listenFor: [
     'A pattern of notes gets denser and faster as the map gets brighter.',
     'A rising tone marks a region that gained light; a falling tone marks one that lost it.',
+    'Zoomed views of India, Ukraine, Western Europe and the Eastern Mediterranean get their own short phrases.',
   ],
   grid: { cols: 64, rows: 32 },
   // The bottom ~12% is a static grey band with no map content; blank it so it cannot drive notes.
+  // NOTE: the source is 32:9 (7680x2160); the grid is currently 64x32 (2:1). Decide with T4.1 whether to widen it (e.g. 96x27) so analysis is not squished.
   ignore: [{ x: 0, y: 0.88, w: 1, h: 0.12 }],
   createSonifier: createPlaceholderSonifier,
 };
