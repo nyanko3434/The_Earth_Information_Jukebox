@@ -14,6 +14,14 @@
 #   6 s, 7 s       a large bright flash, then a small dim one, both centre
 #   8-10 s         40 flashes in 2 s (the note cap should hold)
 #   12-14.5 s      six dots that appear and stay (one note each, on appearing)
+#
+# oceantest.mp4 (ocean sonifier), in the colours of the ocean clip's colorbar
+#   whole clip  grey "land" over the north-east (that voice stays silent) and a
+#               bright red band along the bottom, where the colorbar is (never sounds)
+#   0-6 s       west red (warm), east blue (cold), still   west voices 110 Hz and louder, east 880 Hz; no shimmer
+#   6-12 s      the same, swapped                          west 880 Hz, east 110 Hz and louder; no shimmer
+#   12-18 s     green everywhere (370 Hz), with a bright   shimmer in tropics-west and south-west only
+#               bar crossing the west half below the north
 set -euo pipefail
 cd "$(dirname "$0")"
 force="${1:-}"
@@ -64,4 +72,26 @@ if wanted flashes.mp4; then
     -f lavfi -i "color=c=0x0a1428:s=640x320:r=30:d=18" \
     -vf "$f,format=yuv420p" "${encode[@]}" flashes.mp4
   echo "wrote flashes.mp4"
+fi
+
+if wanted oceantest.mp4; then
+  half() { # x colour, then an enable expression: one half of the map, above the bottom band
+    printf ",drawbox=x=%s:y=0:w=320:h=270:c=%s:t=fill:enable='%s'" "$1" "$2" "$3"
+  }
+  warm=0xCC3914 cold=0x1F67CC mild=0x24B239
+  f="null"
+  f+=$(half 0 $warm "lt(t,6)")
+  f+=$(half 320 $cold "lt(t,6)")
+  f+=$(half 0 $cold "gte(t,6)*lt(t,12)")
+  f+=$(half 320 $warm "gte(t,6)*lt(t,12)")
+  f+=$(half 0 $mild "gte(t,12)")
+  f+=$(half 320 $mild "gte(t,12)")
+  f+=",drawbox=x=320:y=0:w=320:h=110:c=0x404040:t=fill"
+  f+=",drawbox=x=0:y=270:w=640:h=50:c=0xFF2020:t=fill"
+  ffmpeg -y -hide_banner -loglevel error \
+    -f lavfi -i "color=c=black:s=640x320:r=30:d=18" \
+    -f lavfi -i "color=c=0x33FF52:s=20x160:r=30:d=18" \
+    -filter_complex "[0]${f}[map];[map][1]overlay=x='(W/2-w)*mod(t,2)/2':y=110:enable='gte(t,12)',format=yuv420p" \
+    "${encode[@]}" oceantest.mp4
+  echo "wrote oceantest.mp4"
 fi

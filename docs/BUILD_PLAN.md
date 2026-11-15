@@ -6,7 +6,7 @@ The order we build in, with a check at the end of each step. Times are working h
 
 **Progress:** Step 0 is finished (public link live, both teammates have pushed). **Current step: Step 1**, which closes when the deployed site plays the lightning clip with sound; Step 2 and Step 4 work is running alongside it. Each teammate updates only their own line below, so two branches never edit the same line. Details go in PROJECT_LOG.md.
 
-**A (Sound), updated 2026-11-15:** Step 1 half done (FrameSource, Analyser, test tone, engine; checked in the dev harness). Step 2 half written (lightning sonifier, scales, reverb master bus; checked on a synthetic clip), still to be tuned on real lightning footage and listened to by both teammates. Next: ocean sonifier (Step 4), then legend sounds and `describeNow` (Step 5).
+**A (Sound), updated 2026-11-15 11:15:** Step 1 half done (FrameSource, Analyser, test tone, engine; checked in the dev harness). Step 2 half written (lightning sonifier, scales, reverb master bus; checked on a synthetic clip), still to be tuned on real lightning footage and listened to by both teammates. Step 4, A's half written: the ocean sonifier (`src/tracks/ocean/sonifier.ts`), checked in headless Chrome on the real ocean clip and on a synthetic one, not yet listened to, and not yet wired into the ocean `track.ts` (B's file). Next: legend sounds for lightning and ocean (Step 5; `describeNow` is written for both), then volume balance (Step 6).
 
 **B (Experience):** lightning metadata and `TrackList` are merged, but the lightning clip and the Jukebox/Player shell are still outstanding, so Step 1 is not yet done. Step 2 work already under way: ocean and night lights track shells, the About section and the `Announcer` live region are written.
 
