@@ -1,5 +1,5 @@
 import type { TrackDef } from '../../types.ts';
-import { createTestTone } from '../../audio/testTone.ts';
+import { createLightningSonifier } from './sonifier.ts';
 
 export const lightningTrack: TrackDef = {
   id: 'lightning',
@@ -21,9 +21,9 @@ export const lightningTrack: TrackDef = {
     'A louder note means a bigger flash.',
   ],
   grid: { cols: 64, rows: 32 },
-  // TODO(B): the clip (T1.1) is still missing, so overlays cannot be inspected yet.
-  ignore: [],
-  createSonifier: (output) => createTestTone(output),
+  // A small static label in the bottom-right corner; the rest of the frame is clean map.
+  ignore: [{ x: 0.92, y: 0.9, w: 0.08, h: 0.1 }],
+  createSonifier: (output) => createLightningSonifier(output),
 };
 
 export default lightningTrack;

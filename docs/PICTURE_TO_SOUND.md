@@ -94,7 +94,24 @@ Every 4 seconds the chord is played again: each voice dips, slides to its new no
 
 ## Track 3: Night lights
 
-Not written yet. The plan (VISION.md): the brighter the map, the denser and faster the pattern of notes, with rising or falling tones where a region gained or lost light.
+The picture is a flat world map of Earth's night lights. It starts with annual averages from 2012 to 2023 (warm white lights on black), then fades to a change map where orange marks regions that lost light and purple marks regions that gained it, and then shows zoomed-in views of India, Ukraine, Western Europe and the Eastern Mediterranean.
+
+The app measures how bright the map is overall and the colour of each square. Instead of long chords, it plays a steady pattern of short notes.
+
+| In the picture | In the sound | How to say it |
+| --- | --- | --- |
+| How bright the map is overall | How many notes per second: about 3 on the annual map, up to about 8 on the change map, and louder notes | "Brighter map, busier music." |
+| How far left or right a note's square is | Which ear | "West is in your left ear, east in your right." |
+| How far up or down it is | Pitch (C4 to C6, pentatonic) | "High notes are in the north, low notes in the south." |
+| An orange square in the change map | A falling tone: that region lost light | "Falling means the lights went down." |
+| A purple square in the change map | A rising tone: that region gained light | "Rising means the lights came up." |
+| Bright content in one narrow part of the map (a zoom) | A short rising three-note phrase from that region | "A zoom gets its own little phrase." |
+
+The change map in this clip is mostly orange, so falling tones dominate that section; purple (gained light) is rare. The pattern only runs while the picture plays.
+
+**What you hear in this clip.** The annual averages are sparse and calm, a few notes a second. When the change map arrives the map is brighter and more colourful, so the notes come faster and the falling tones appear. Each zoom into a city region answers with a quick rising phrase.
+
+**One difference from the other two.** This track has no single voice that holds a note: it is a pulse of short notes, and the overall brightness sets the pulse's speed.
 
 ## What it does not do
 

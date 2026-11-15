@@ -1,5 +1,5 @@
 import type { TrackDef } from '../../types.ts';
-import { createPlaceholderSonifier } from '../placeholderSonifier.ts';
+import { createNightlightsSonifier } from './sonifier.ts';
 
 export const nightlightsTrack: TrackDef = {
   id: 'nightlights',
@@ -17,11 +17,13 @@ export const nightlightsTrack: TrackDef = {
   listenFor: [
     'A pattern of notes gets denser and faster as the map gets brighter.',
     'A rising tone marks a region that gained light; a falling tone marks one that lost it.',
+    'Zoomed views of India, Ukraine, Western Europe and the Eastern Mediterranean get their own short phrases.',
   ],
-  grid: { cols: 64, rows: 32 },
+  // 96x27 keeps the source's 32:9 aspect (the max canvas is 96x48), so analysis is not squished.
+  grid: { cols: 96, rows: 27 },
   // The bottom ~12% is a static grey band with no map content; blank it so it cannot drive notes.
   ignore: [{ x: 0, y: 0.88, w: 1, h: 0.12 }],
-  createSonifier: createPlaceholderSonifier,
+  createSonifier: (output) => createNightlightsSonifier(output),
 };
 
 export default nightlightsTrack;
