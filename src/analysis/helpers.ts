@@ -1,6 +1,6 @@
 // Values derived from FrameFeatures. They live here, not in FrameFeatures, so
 // the shared type stays small. Only the helpers a track already uses exist:
-// findFlashes (lightning), hueToValue and regionValue (ocean).
+// findFlashes and findRises (lightning), hueToValue and regionValue (ocean).
 import type { FrameFeatures, Rect } from '../types.ts';
 
 /** One point on a visualization's colorbar: the hue drawn there and the value it stands for. */
@@ -104,12 +104,20 @@ export interface Flash {
  * Strongest first. Luma that falls (a flash fading) is ignored.
  */
 export function findFlashes(f: FrameFeatures, threshold: number): Flash[] {
-  const { cols, rows, deltaLuma } = f;
+  return findRises(f.deltaLuma, f.cols, f.rows, threshold);
+}
+
+/**
+ * The same search as findFlashes, on any per-cell change (row-major, cols x rows).
+ * For a track whose flashes are a rise in something other than luma: `strength`
+ * is then the total rise of that quantity over the cell and its neighbours.
+ */
+export function findRises(delta: Float32Array, cols: number, rows: number, threshold: number): Flash[] {
   const flashes: Flash[] = [];
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const cell = row * cols + col;
-      const rise = deltaLuma[cell];
+      const rise = delta[cell];
       if (rise <= threshold) continue;
 
       let isPeak = true;
@@ -121,7 +129,7 @@ export function findFlashes(f: FrameFeatures, threshold: number): Flash[] {
           const c = col + dx;
           if (c < 0 || c >= cols) continue;
           const other = r * cols + c;
-          const d = deltaLuma[other];
+          const d = delta[other];
           // On an exact tie the earlier cell wins, so a flat blob gives one flash.
           if (d > rise || (d === rise && other < cell)) {
             isPeak = false;
