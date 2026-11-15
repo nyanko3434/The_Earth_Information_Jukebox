@@ -175,36 +175,21 @@ A's entries from Step 2 on. A adds new entries at the end of this section, above
 - Checked in headless Chrome on B's shell with the normal autoplay policy: the legend lists 6, 3 and 5 buttons for the three tracks before any gesture, with the audio context suspended; a legend press as the very first gesture starts the context and sounds after about 200 ms with the picture still at 0 s and paused; on each track a press while the picture plays pauses it, the button returns to "Play" and the live region says "…: paused"; every one of the 14 examples sounds and is over within 2.3 s of its press; the output is silent after the 3 s hold; legend buttons take focus, and Space on one does not start the picture; Play resumes the track; changing track in the middle of an example is silent within 250 ms and lists the new legend. The panel showed its sentence changing 13, 8 and 3 times in 7 s on the three tracks, is not inside a live region (the page still has exactly one), and the headings run h1, h2, h3 in order. No errors in the page log. `npm run lint` and `npm run build` pass.
 - **Not verified:** A has not yet listened to the three tracks side by side after the balance, to the night lights track, or to the night lights legend. No screen reader, Firefox or phone check yet (Step 6).
 
-### Handoff: A's next session
+- 20:05 — DEPLOY 1: `a/finish` merged to `dev` and `dev` to `main` (PR #6, `01d1947`). Checked on the public URL in headless Chrome with the normal autoplay policy: the three tracks play (12 s each) and a legend press pauses them with the button back to "Play" and the live region saying "…: paused"; the legends list 6, 3 and 5 buttons and a press before Play leaves the picture at 0 s; the panel's sentence follows the picture, and on lightning it reported flashes throughout (14 different "flashes in the last second" sentences in 12 s); the new lightning "listen for" wording is live. The only log entries were aborted video requests when the track changed. The output level cannot be measured on the production bundle, so sound on the public site rests on the dev-server measurements and on listening.
+- **Problem (solved):** the machine's temp folder was cleared at about 19:57, taking the check scripts with it; the browser driver and a deployed-site check were rewritten. The dev server on port 5199 also stopped then.
+- 20:10 — Step 7: `README.md` rewritten (what it is, how to use it, how it works, a mapping table and legend per track, limits, how to run, layout, credits with each SVS credit line and URL, use of AI, licence). `docs/SUBMISSION.md` now holds the text for the form (project name Earth Jukebox, Summary of 195 words and 1122 characters, Project Details, which AI boxes to select), the commands for recording and trimming the demo, and the two resource lists ticked to match the repo (FFmpeg, Node.js, Chrome, Claude added; GEOS Aerosols marked not used).
+- **Not verified:** Firefox, a phone and a screen reader (none installed at 20:05), and A's listening to the balance and to night lights. The README says which checks were and were not done; update that paragraph if any of them is run before submitting.
 
-Read this, the two progress lines in BUILD_PLAN, and ARCHITECTURE ("Engine API", "Legend" and "Audio rules") first.
+### Handoff: where things stand (20:10)
 
-What exists on A's side:
+Deployed and working: three tracks, each with its sonifier, audio legend and "What you are hearing" sentence. Feature freeze is 21:00; after it, only bug fixes.
 
-- `src/analysis/`: `frameSource.ts`, `analyser.ts`, `helpers.ts` (`findFlashes`, `hueToValue`, `regionValue`), and the dev harness in `dev/`.
-- `src/audio/`: `engine.ts` (`createEngine`, the one call the UI makes; it also carries `legend`), `master.ts` (gain, reverb, duck, limiter), `scales.ts`, `testTone.ts`.
-- `src/tracks/lightning/sonifier.ts`: written, with six legend sounds; a flash is a rise in yellow; measured on the real clip and on the synthetic `flashes.mp4`; not yet listened to.
-- `src/tracks/ocean/sonifier.ts`: written, with three legend sounds; checked on the real clip and on the synthetic `oceantest.mp4`; the track sound has been listened to by A.
-- The legend work is in `dev` (`c11e232`) and goes to `main` by pull request. New work starts on a new branch cut from `dev`: `a/lightning-tuning`.
+Still to do, in order:
 
-What A still owes, in the order to do it:
-
-1. ~~**Get the pull request from `dev` to `main` merged**~~ Done: PR #5 is merged, and `main`, `dev` and `a/lightning-tuning` are level (`2d3423a`). The check on the deployed site that all three tracks still play and pause is still open.
-2. **Listen to the legend sounds** in the harness (`?clip=media/ocean.mp4&sonifier=ocean`, and `?clip=flashes.mp4&sonifier=lightning`), before Play and while the clip plays. Check "Moving water" first.
-3. **Ocean track:** B listens, and a check on laptop speakers (the tropical voices, and the "Warm water" example, are as low as 110 Hz).
-4. **Lightning (Step 2):** the detector is changed and measured on the real clip (18:25 entries above). Still to do: listen to it (`?clip=media/lightning.mp4&sonifier=lightning`), and adjust the constants at the top of the sonifier by ear.
-5. **Step 6:** volume balance across tracks, audio bugs, Chrome and Firefox. Feature freeze is at the end of Step 6. **Step 7:** the mapping table and technical write-up for the README (B leads the README).
-
-Not code, still open:
-
-- Only the ocean track's own sound has been listened to, and only by A. Every other check, including all of the legend, measured the signal in headless Chrome.
-- `docs/PICTURE_TO_SOUND.md` is the draft of the README's mapping table and technical write-up (Step 7); the night lights section is empty until B writes that sonifier.
-- Two things in ARCHITECTURE are marked as awaiting B's agreement: the sonifier lifecycle sentence, and `engine.legend`.
-- To raise with B:
-  - `engine.legend` (ARCHITECTURE, "Legend"): agree to the added member. B's `Legend.tsx` on `b/step5-nowhearing` already fits it: merge `origin/dev` into that branch, then mount it in `Jukebox.tsx` with `items={engine.legend}`. `Jukebox` keeps the engine only in a ref today; it also has to go into state, or the list will not render.
-  - A legend press pauses the picture, so `Jukebox`'s own `pause` listener announces "paused" at that moment; anything `Legend`'s `onPlay` announces lands on top of it, and speech over a 0.5 to 1.6 s example may hide the example.
-  - The night lights sonifier's `legend` is empty. Its items must follow the legend rules in ARCHITECTURE ("Audio rules"); the lightning sonifier is the closest model.
-  - The ocean track's pitch exception; the per-teammate progress line in BUILD_PLAN.
+1. Commit the README and SUBMISSION text and deploy (docs only).
+2. A's checks on the deployed site: listen to the three tracks for balance and to night lights and its legend; keyboard-only pass; Firefox and a phone if there is time. A change by ear is a constant: `LEVEL` at the top of each `sonifier.ts`.
+3. Record the demo (commands and shot list in SUBMISSION.md), trim to 29 s, upload, test the link in a private window.
+4. Fill in the form from SUBMISSION.md and submit by 22:59.
 
 How to check sound work: `npm run dev`, then the harness at `/The_Earth_Information_Jukebox/src/analysis/dev/harness.html` (options and clips are described in CLAUDE.md and in `src/analysis/dev/make-clips.sh`).
 
