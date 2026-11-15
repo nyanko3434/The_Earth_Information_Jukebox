@@ -212,6 +212,9 @@ How to check sound work: `npm run dev`, then the harness at `/The_Earth_Informat
 - Docs updated: ARCHITECTURE (the `setRegion` bullet), README, PICTURE_TO_SOUND, VISION, SUBMISSION, About, BUILD_PLAN (A's line).
 - 21:00 — A found the smallest square too big. The minimum side is now 0.15 of the picture's height on every track (it was 0.57 on the 32:9 clips), and the square starts at 0.4. The width limit of 0.16 that protects the night lights zoom detection now applies to that track only (`MIN_SQUARE_WIDTH` in `regions.ts`, passed to `Player` as `minSquareWidth`), so night lights keeps its minimum of 0.57 of the height. Checked in headless Chrome: wheel down stops at 0.15 of the height on the three lightning clips and the ocean clip and at 0.57 on night lights; everything else in the square check still passes.
 
+- 21:17 — DEPLOY 2: `a/clips-and-region` merged to `dev` and `dev` to `main` (PR #8, `1cf1a31`). Checked on the public URL in headless Chrome with the normal autoplay policy (bundle `index-Dw26oVfC.js`): five tracks listed; every clip and poster loads, `lightning2` and `lightning3` included; the legends list 6, 6, 6, 3 and 5 buttons; on each track a click turns the square on at the click, it stays inside the picture at the corners, the wheel stops at the full height and at the minimum (0.15 of the height, 0.57 on night lights) without scrolling the page, the picture keeps playing, a second click turns it off, a preset button takes over, Pause works with the square on; changing track turns the square off; one live region; no errors in the page log. The square keeps its size from one track to the next.
+- **Not verified:** the sound of the new clips and of a chosen area by ear, on the public site or anywhere else; touch; Firefox, a phone and a screen reader. As before, the output level cannot be measured on the production bundle.
+
 ## B (Experience)
 
 B's entries from Step 1 on. B adds new entries at the end of the file.
