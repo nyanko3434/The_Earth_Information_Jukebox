@@ -1,2 +1,3 @@
-# Local stand-in clip for the dev harness. Generated with ffmpeg; see harness.html.
-standin.mp4
+# Local clips for the dev harness: the generated test clips (make-clips.sh) and
+# any real footage kept here for tuning. None of it is committed or deployed.
+*.mp4

@@ -28,7 +28,7 @@ npm run lint     # oxlint, configured in .oxlintrc.json
 
 There is no test runner. Type errors surface through `npm run build`, not through `npm run lint`. Sound is judged by ear on the deployed site (see WORK_DIVISION.md).
 
-To run the analysis and audio pipeline without the UI, start `npm run dev` and open the dev harness at `/The_Earth_Information_Jukebox/src/analysis/dev/harness.html`. It shows the live `FrameFeatures` and plays the test tone. It is not part of the build. Its stand-in clip (`src/analysis/dev/standin.mp4`) is git-ignored; the ffmpeg command that makes it is at the top of `harness.html`.
+To run the analysis and audio pipeline without the UI, start `npm run dev` and open the dev harness at `/The_Earth_Information_Jukebox/src/analysis/dev/harness.html`. It shows the live `FrameFeatures` and plays either the test tone or the lightning sonifier. It is not part of the build. Clips in `src/analysis/dev/` are git-ignored; `bash src/analysis/dev/make-clips.sh` generates the two synthetic test clips (`standin.mp4`, `flashes.mp4`). Choose with the URL, for example `?clip=flashes.mp4&sonifier=lightning`.
 
 TypeScript settings from the template that reject otherwise ordinary code (`tsconfig.app.json`):
 
@@ -81,7 +81,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 - Start audio only from a user gesture (`await Tone.start()` in the Play handler).
 - Quantise every pitch to a scale (default pentatonic, `src/audio/scales.ts`), smooth continuous values (EMA or `rampTo` over 100–300 ms), and cap triggered notes at about 12 per second per track.
 - On flat world maps, longitude maps to stereo pan and latitude to pitch, in every track.
-- `pause()` must silence within 200 ms. No sound continues while the picture is paused. A sonifier's `start()` runs once, `pause()` keeps its nodes, and the next `update()` resumes the sound.
+- `pause()` must silence within 200 ms. No sound continues while the picture is paused. A sonifier's `start()` runs once, `pause()` keeps its nodes, and the next `update()` resumes the sound. The engine also mutes the master bus after the reverb on every pause, so do not route anything around the bus.
 - Everything routes through the single master bus.
 
 ### Accessibility (applies from the first commit, never cut)

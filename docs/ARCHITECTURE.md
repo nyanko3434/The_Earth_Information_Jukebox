@@ -43,13 +43,13 @@ src/
   analysis/
     frameSource.ts       video -> small canvas -> pixels, at about 20 Hz
     analyser.ts          pixels -> FrameFeatures
-    helpers.ts           derived values (Step 2)
-    dev/                 dev-only harness page; never built or deployed
+    helpers.ts           derived values (findFlashes so far)
+    dev/                 dev-only harness page and test-clip script; never built or deployed
   audio/
     engine.ts            createEngine(): the one call the UI makes (see "Engine API")
-    master.ts            master bus
+    master.ts            master bus: gain -> reverb -> duck -> limiter
     testTone.ts          Step 1 test tone (a Sonifier)
-    scales.ts            pitch quantising (Step 2)
+    scales.ts            pitch quantising (pentatonic by default)
   tracks/
     index.ts             list of TrackDef
     lightning/           track.ts (metadata) + sonifier.ts
@@ -114,7 +114,8 @@ export interface TrackDef {
 
 Derived values live in `src/analysis/helpers.ts`, not in `FrameFeatures`, so the core type stays small:
 
-- `findFlashes(f, threshold)` returns cells whose luma jumped, with x, y and strength.
+- `findFlashes(f, threshold)` returns cells whose luma jumped, with x, y and strength. One result per blob (a cell counts only if no neighbour rose more), strongest first; falling luma is ignored. `strength` is the total rise over the cell and its eight neighbours. (Written.)
+- The four below are not written yet; each arrives with the first track that needs it.
 - `regionMean(f, rect, channel)` returns the mean of a channel over a region.
 - `colourCoverage(f, classes)` returns, per colour class, the fraction of cells and their centroid.
 - `column(f, x)` returns the cells in one column (used for still-image sweeps).
@@ -146,17 +147,19 @@ const engine = createEngine({ video: videoRef.current, track }); // in an effect
 <button onClick={() => engine.pause()}>Pause</button>
 ```
 
-Until the lightning sonifier exists (Step 2), a track uses the test tone: `createSonifier: (output) => createTestTone(output)`, from `src/audio/testTone.ts`. It is one sine: pitch follows `meanLuma`, and stereo position follows the horizontal centre of brightness, so something bright on the left of the picture is heard on the left.
+The lightning track uses `createSonifier: (output) => createLightningSonifier(output)`, from `src/tracks/lightning/sonifier.ts`. A track with no sonifier yet can use the test tone: `createSonifier: (output) => createTestTone(output)`, from `src/audio/testTone.ts`. The test tone is one sine: pitch follows `meanLuma`, and stereo position follows the horizontal centre of brightness, so something bright on the left of the picture is heard on the left.
 
 - The video element is the source of truth for play state. The engine keeps no `isPlaying`; read `video.paused` and the `play`, `pause` and `ended` events for button labels and the live region.
 - Sound follows the picture, not the button. The engine silences on the video's own `pause` and `ended` events, so native controls and the end of the clip behave. With no analysed frame for 250 ms (buffering, hidden tab) it also silences, and resumes with the next frame.
+- The engine, not the sonifier, guarantees the pause rule: on every pause it mutes the master bus after the reverb (`setMasterAudible` in `master.ts`) and reopens it on the next analysed frame. A sonifier's own `pause()` still has to stop its notes, but a reverb tail or a slow release cannot leak.
+- One engine per track. On a track change, dispose the old engine and create a new one. If the video is already playing at that moment, call `play()` on the new engine, because the video's `play` event will not fire again.
 - `onFeatures` fires only while the video is playing, including when audio has not been unlocked.
 - No audio node is built before the first `play()`. Chrome still logs "The AudioContext was not allowed to start" at page load, because importing Tone creates its suspended context; that is expected, and `play()` resumes it.
 - Video only for now. Still images (`scanX`) are added to the same function if Track 4 is built.
 
 ### Dev harness
 
-`src/analysis/dev/harness.html` runs the pipeline through `createEngine` without the UI shell, and shows the features the Analyser reports. With `npm run dev` it is at <http://localhost:5173/The_Earth_Information_Jukebox/src/analysis/dev/harness.html>. It is not linked from `index.html`, so it is left out of the build. It loads `src/analysis/dev/standin.mp4`, a synthetic ffmpeg test clip that is git-ignored; the command to generate it is at the top of `harness.html`. Any other clip can be loaded with the page's file picker.
+`src/analysis/dev/harness.html` runs the pipeline through `createEngine` without the UI shell, and shows the features the Analyser reports, the notes the lightning sonifier plays, and each sonifier's `describeNow` sentence. A select switches between the test tone and the lightning sonifier. With `npm run dev` it is at <http://localhost:5173/The_Earth_Information_Jukebox/src/analysis/dev/harness.html>. It is not linked from `index.html`, so it is left out of the build. Every `.mp4` in `src/analysis/dev/` is git-ignored. `bash src/analysis/dev/make-clips.sh` generates two synthetic ffmpeg test clips there, and its header says what each contains and should sound like: `standin.mp4` (brightness sweep, moving square, colour bars; for the test tone) and `flashes.mp4` (flashes at known places and times on a static map; for the lightning sonifier). The page loads `standin.mp4` unless the URL says otherwise: `?clip=flashes.mp4&sonifier=lightning`. A local cut of real footage can be kept in the same folder and loaded with `?clip=`, or any file can be loaded with the page's file picker.
 
 ## Analysis rules
 
@@ -174,8 +177,8 @@ Until the lightning sonifier exists (Step 2), a track uses the test tone: `creat
 - Start audio only from a user gesture (`await Tone.start()` in the Play handler). Browsers block it otherwise.
 - Quantise every pitch to a scale (default: pentatonic). Helpers live in `src/audio/scales.ts`.
 - Smooth continuous values before they reach a synth parameter (exponential moving average, or `rampTo` over 100–300 ms).
-- Cap triggered notes at about 12 per second per track.
-- Everything goes through one master bus: light reverb, then a limiter. Default volume is conservative. (`src/audio/master.ts`; in Step 1 it is gain at -12 dB then a limiter, and the reverb arrives in Step 2.) The bus is stereo throughout: a source panned with a Tone `Panner` before the bus comes out panned at the speakers (measured on 2026-11-14). Anything added to the bus must keep two channels.
+- Cap triggered notes at about 12 per second per track. The lightning sonifier does it with a token bucket (10 per second plus 2 saved up, so no one-second span exceeds 12) and spends tokens on the strongest flashes first.
+- Everything goes through one master bus: light reverb, then a limiter. Default volume is conservative. (`src/audio/master.ts`: gain at -12 dB, reverb with a 1.8 s decay at 18 % wet, a duck gain the engine closes on pause, then a limiter at -1 dB.) The bus is stereo throughout: a source panned with a Tone `Panner` before the bus comes out panned at the speakers (measured on 2026-11-14). Anything added to the bus must keep two channels.
 - Map longitude to stereo pan and latitude to pitch where the frame is a flat world map, so position means the same thing in every track.
 - `pause()` must silence within 200 ms. No sound may continue while the picture is paused.
 - Sonifier lifecycle (proposed by A on 2026-11-14, awaiting B's agreement; no change to the types): `start()` is called once per sonifier; `pause()` silences but keeps the nodes; the next `update()` resumes the sound. The engine relies on this.

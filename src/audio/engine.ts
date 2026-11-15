@@ -5,7 +5,7 @@ import { start as startAudio } from 'tone';
 import { Analyser } from '../analysis/analyser.ts';
 import { FrameSource } from '../analysis/frameSource.ts';
 import type { FrameFeatures, Sonifier, TrackDef } from '../types.ts';
-import { getMasterBus } from './master.ts';
+import { getMasterBus, setMasterAudible } from './master.ts';
 
 /** With no analysed frame for this long while playing, the sound is paused (stall, hidden tab). */
 const STALL_MS = 250;
@@ -33,6 +33,9 @@ export function createEngine({ video, track }: EngineOptions): Engine {
   let sonifier: Sonifier | null = null;
   let disposed = false;
   let watchdog: number | undefined;
+  // Whether this engine has opened the master bus. Closed on every pause, so a
+  // reverb tail cannot outlast the picture.
+  let audible = false;
 
   // Audio nodes are built here, on the first Play, never at creation.
   const unlock = async () => {
@@ -45,6 +48,8 @@ export function createEngine({ video, track }: EngineOptions): Engine {
   const silence = () => {
     window.clearTimeout(watchdog);
     sonifier?.pause();
+    setMasterAudible(false);
+    audible = false;
   };
 
   // Covers Play pressed on the video's own controls. Stays pending, harmlessly,
@@ -57,6 +62,10 @@ export function createEngine({ video, track }: EngineOptions): Engine {
     // A frame can still arrive just after pause; it must not restart the sound.
     if (video.paused || video.ended) return;
     const features = analyser.analyse(pixels, time);
+    if (sonifier && !audible) {
+      setMasterAudible(true);
+      audible = true;
+    }
     sonifier?.update(features);
     for (const cb of subscribers) cb(features);
     window.clearTimeout(watchdog);
@@ -94,6 +103,7 @@ export function createEngine({ video, track }: EngineOptions): Engine {
       video.removeEventListener('pause', silence);
       video.removeEventListener('ended', silence);
       subscribers.clear();
+      setMasterAudible(false);
       sonifier?.dispose();
       sonifier = null;
     },
