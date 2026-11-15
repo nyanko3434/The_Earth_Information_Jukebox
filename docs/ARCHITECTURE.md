@@ -52,6 +52,7 @@ src/
     scales.ts            pitch quantising (pentatonic by default)
   tracks/
     index.ts             list of TrackDef
+    placeholderSonifier.ts   silent Sonifier for a track whose mapping is not written yet
     lightning/           track.ts (metadata) + sonifier.ts
     ocean/
     nightlights/

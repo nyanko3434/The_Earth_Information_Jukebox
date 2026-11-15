@@ -45,7 +45,8 @@ B writes one sonifier on Day 2 so that both of you have worked on the sound, and
 
 ## Working agreements
 
-- Short-lived branches, merged to `main` several times a day. `main` always deploys.
+- Short-lived branches, merged to `main` several times a day. `main` always deploys. Each teammate works on their own branch (`a/<topic>`, `b/<topic>`) cut from an up-to-date `dev`, and merges `origin/dev` into it before starting and before each commit point.
+- In the shared docs, edit only your own lines: your progress line in BUILD_PLAN, and your section of PROJECT_LOG (A's section sits above B's; B adds at the end of the file). This keeps two branches from changing the same lines.
 - Pull before starting a Claude Code session, and tell it to read `docs/ARCHITECTURE.md` first.
 - Do not edit files in the other person's area without asking. If you need a change there, ask them.
 - Sound is judged by both of you, by ear, at the end of Steps 2, 4 and 6. Neither person signs off a track alone.

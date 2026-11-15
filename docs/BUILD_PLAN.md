@@ -4,7 +4,11 @@ The order we build in, with a check at the end of each step. Times are working h
 
 **Before anything else:** confirm the exact submission deadline for our local event and write it here: `2026 Nov 15 11:59pm`.
 
-**Progress:** Step 0 finished on 2026-11-14 (public link live; teammate push access still to confirm). **Current step: Step 1.** A's half (FrameSource, Analyser, test tone, engine) is written and checked in the dev harness. B's lightning metadata and `TrackList` are merged, but B's lightning clip and the Jukebox/Player shell are still outstanding, so Step 1 is not yet done. Step 2 work already under way. A: the lightning sonifier, scales and the reverb master bus are written and checked on a synthetic clip, and still need tuning on real lightning footage and a listen by both teammates. B: ocean and night lights track shells, the About section and the `Announcer` live region are written. Update this line when a step is finished; details go in PROJECT_LOG.md.
+**Progress:** Step 0 is finished (public link live, both teammates have pushed). **Current step: Step 1**, which closes when the deployed site plays the lightning clip with sound; Step 2 and Step 4 work is running alongside it. Each teammate updates only their own line below, so two branches never edit the same line. Details go in PROJECT_LOG.md.
+
+**A (Sound), updated 2026-11-15:** Step 1 half done (FrameSource, Analyser, test tone, engine; checked in the dev harness). Step 2 half written (lightning sonifier, scales, reverb master bus; checked on a synthetic clip), still to be tuned on real lightning footage and listened to by both teammates. Next: ocean sonifier (Step 4), then legend sounds and `describeNow` (Step 5).
+
+**B (Experience):** lightning metadata and `TrackList` are merged, but the lightning clip and the Jukebox/Player shell are still outstanding, so Step 1 is not yet done. Step 2 work already under way: ocean and night lights track shells, the About section and the `Announcer` live region are written.
 
 ## Day 1
 

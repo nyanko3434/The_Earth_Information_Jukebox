@@ -5,7 +5,8 @@ A running record of work done and changes made during the project. It answers "w
 ## How to use this log
 
 - Add an entry whenever a piece of work is finished, a decision is made, scope is cut, or a plan in another doc changes.
-- Entries go under the current date, oldest first, newest at the bottom.
+- From 2026-11-15 the log has one section per teammate, so that two branches never add lines at the same place (that caused a merge conflict on Day 1). **A adds entries at the end of the "A (Sound)" section. B adds entries at the end of the file, which is the "B (Experience)" section.** Nobody adds anything below B's section except B.
+- Within a section, entries go under a date subheading, oldest first, newest at the bottom.
 - Each entry is one line: time (24 h, local), who (A, B, both), and what changed. Add a short "why" when it is not obvious.
 - Name the BUILD_PLAN step where one applies, and any doc that was updated as a result.
 - Record decisions and problems as well as completed work. Mark them **Decision:** or **Problem:**.
@@ -86,18 +87,11 @@ A's half is ready to be called. What B needs:
 
 Step 1 is done when the deployed site plays the lightning clip with a tone that follows the picture and pausing silences it.
 
-- 15:10 — Step 1, B: `src/tracks/lightning/track.ts` and `src/tracks/index.ts` added. Lightning metadata with the real SVS 5011 credit and source URL, the description, four "listen for" bullets, a 64x32 grid, and `createSonifier` wired to A's `createTestTone`. Media URLs are built from `import.meta.env.BASE_URL` as ARCHITECTURE requires. `ignore` is empty with a TODO for T3.3, once the clip exists.
-- 15:10 — Step 1, B: `src/components/TrackList.tsx` added, presentational: a `<nav>` with one button per track, the selected one marked with `aria-current`.
-- Note: `public/media/lightning.mp4` and `lightning.jpg` are still outstanding (B's media task); until they land the player will show a missing poster. `npm run lint` and `npm run build` pass.
+## A (Sound)
 
-### Phase 2 (Step 2), B's half
+A's entries from Step 2 on. A adds new entries at the end of this section, above the "B (Experience)" heading.
 
-- 15:20 — Step 2, B: `src/tracks/ocean/track.ts` and `src/tracks/nightlights/track.ts` added as metadata shells with the real SVS 3912 and 5313 credit lines, source URLs, descriptions and "listen for" bullets, plus `src/tracks/placeholderSonifier.ts` (a silent `Sonifier`) until the real mappings land. Both are registered in `src/tracks/index.ts` alongside lightning, so the track list is ready for the shell. `ignore` is empty with TODOs for T3.3.
-- 15:20 — Step 2, B: `src/components/About.tsx` added, static: how the sound is made, the pixels-not-data caveat, the SVS credits, and the AI-use note.
-- 15:20 — Step 2, B: accessibility baseline for the live region. `src/a11y/Announcer.tsx` renders the single `role="status"`, `aria-live="polite"` region, and `.sr-only` was added to `index.css`. ARCHITECTURE updated to say the shell mounts it. It is not mounted yet: `Jukebox.tsx` and `Player.tsx` (T1.4) are not on `main`, so T2.4 and mounting the Announcer are blocked on that merge.
-- Note: `public/media/ocean.mp4`/`ocean.jpg` and `nightlights.mp4`/`nightlights.jpg` are still outstanding (T3.2); the paths here fix those filenames. `npm run lint` and `npm run build` pass.
-
-### Step 2, A's half
+### 2026-11-14 (Day 1), Step 2
 
 - 17:35 — **Decision:** A started Step 2 before Step 1 is closed. Nothing left in Step 1 is A's, and the dev harness runs the sonifier without the UI shell.
 - 17:35 — Step 2, A: `src/tracks/lightning/sonifier.ts` added. Each new flash is one plucked note: pitch from height in the frame (pentatonic on C, C3 to C6, top is high), pan from left-right position, loudness from the size of the jump in brightness. Eight voices, each with its own panner. A cell that has just sounded stays quiet for 0.4 s, so a flash that brightens over several frames is one note. `legend` is empty until Step 5; `describeNow` is written.
@@ -110,3 +104,51 @@ Step 1 is done when the deployed site plays the lightning clip with a tone that 
 - **Problem (open):** none of this is tuned on real lightning footage, and nobody has listened to it. The SVS 5011 page does not describe the picture. Its text says a 10-day roving window is used, so lightning may linger and fade rather than flash; the threshold, the 0.4 s quiet time and the loudness curve (a 16-pixel flash already reaches 0.91) are the constants to revisit. They are at the top of `sonifier.ts`.
 - **Problem (minor):** a large flash is placed at one cell of its blob, not its centre, so its pitch or pan can be off by a cell or two.
 - For B, when writing the lightning `track.ts`: `createSonifier: (output) => createLightningSonifier(output)` from `src/tracks/lightning/sonifier.ts`. Prefer a flat world map cut of SVS 5011 (the Science On a Sphere file looks like the candidate, unconfirmed), and set `ignore` rectangles over any date or caption. A needs a 45 s local cut of the same footage at `src/analysis/dev/lightning.mp4` to tune against.
+
+### 2026-11-15 (Day 2)
+
+- 10:50 — `dev` now holds both halves: A's Step 2 commit merged with B's two pull requests (#2 lightning metadata and `TrackList`; #4 ocean and night lights track shells, About, `Announcer`). The merge conflicted in two docs, the BUILD_PLAN progress line and the end of this log, because both teammates had edited the same lines. Resolved keeping both. `npm run lint` and `npm run build` pass on the merged tree.
+- **Decision:** to stop those conflicts, shared docs are now edited per teammate. BUILD_PLAN has one progress line each; this log has one section each (rules at the top of this file). A works on short-lived `a/<topic>` branches cut from an up-to-date `dev`, and merges `origin/dev` into the branch before starting and before each commit point. Recorded in CLAUDE.md and WORK_DIVISION. B's habit of adding entries at the end of this file already fits; B still needs to be told about the progress line.
+- Step 0's last open point is closed: B has pushed and merged, so both teammates can push.
+- **Problem (B's, deadline is tonight 23:59):** there is still no UI shell (`src/App.tsx` is the Step 0 placeholder; no Jukebox or Player), no `public/media/lightning.mp4`, and `src/tracks/lightning/track.ts` still wires the test tone. Step 1 is not closed. BUILD_PLAN says Track 3 is the first thing to cut if Day 1's checkpoint was missed.
+- Note: B's branch `b/ignore-rects` (not merged yet) adds the ocean and night lights clips under `public/media/` and their `ignore` rectangles. Once it is in `dev`, A has real footage for the ocean sonifier.
+- ARCHITECTURE folder layout: `src/tracks/placeholderSonifier.ts` (B's silent sonifier) added to the list.
+
+### Handoff: A's next session
+
+Read this, the two progress lines in BUILD_PLAN, and ARCHITECTURE ("Engine API" and "Audio rules") first.
+
+What exists on A's side, all on `dev`:
+
+- `src/analysis/`: `frameSource.ts`, `analyser.ts`, `helpers.ts` (only `findFlashes`), and the dev harness in `dev/`.
+- `src/audio/`: `engine.ts` (`createEngine`, the one call the UI makes), `master.ts` (gain, reverb, duck, limiter), `scales.ts`, `testTone.ts`.
+- `src/tracks/lightning/sonifier.ts`: written, checked on the synthetic `flashes.mp4` only.
+
+What A still owes, in the order to do it:
+
+1. **Ocean sonifier (Step 4):** `src/tracks/ocean/sonifier.ts`. Mapping from VISION: slow chords, warm water lower and fuller, cold water higher and thinner, movement adds shimmer. It needs colour helpers that do not exist yet (`regionMean`, `colourCoverage`, `hueToValue` in ARCHITECTURE; write only the ones it uses). The clip is `public/media/ocean.mp4`, on `b/ignore-rects` until that branch is merged; the track's `ignore` rectangle is the bottom 16 % (colorbar). The harness loads `?clip=` only from its own folder, so either load the clip with the file picker or extend the harness (A's file) to take a `public/media/` path and a third sonifier option. B wires the sonifier in `src/tracks/ocean/track.ts`, which currently uses the placeholder.
+2. **Lightning (Steps 2 and 5):** legend items (`legend` is empty), and tuning the constants at the top of the sonifier once real footage exists. No lightning clip is in the repo yet.
+3. **Step 5:** legend sounds and `describeNow` for every track. **Step 6:** volume balance across tracks, audio bugs, Chrome and Firefox. Feature freeze is at the end of Step 6. **Step 7:** the mapping table and technical write-up for the README (B leads the README).
+
+Not code, still open:
+
+- Nobody has listened to anything yet. Every check so far measured the signal in headless Chrome.
+- The sonifier lifecycle sentence in ARCHITECTURE is still marked as awaiting B's agreement.
+- To raise with B: switch the lightning `track.ts` to `createLightningSonifier`; the shell and the lightning clip (see the problem above); the per-teammate progress line.
+
+How to check sound work: `npm run dev`, then the harness at `/The_Earth_Information_Jukebox/src/analysis/dev/harness.html` (options and clips are described in CLAUDE.md and in `src/analysis/dev/make-clips.sh`).
+
+## B (Experience)
+
+B's entries from Step 1 on. B adds new entries at the end of the file.
+
+- 15:10 — Step 1, B: `src/tracks/lightning/track.ts` and `src/tracks/index.ts` added. Lightning metadata with the real SVS 5011 credit and source URL, the description, four "listen for" bullets, a 64x32 grid, and `createSonifier` wired to A's `createTestTone`. Media URLs are built from `import.meta.env.BASE_URL` as ARCHITECTURE requires. `ignore` is empty with a TODO for T3.3, once the clip exists.
+- 15:10 — Step 1, B: `src/components/TrackList.tsx` added, presentational: a `<nav>` with one button per track, the selected one marked with `aria-current`.
+- Note: `public/media/lightning.mp4` and `lightning.jpg` are still outstanding (B's media task); until they land the player will show a missing poster. `npm run lint` and `npm run build` pass.
+
+### Phase 2 (Step 2), B's half
+
+- 15:20 — Step 2, B: `src/tracks/ocean/track.ts` and `src/tracks/nightlights/track.ts` added as metadata shells with the real SVS 3912 and 5313 credit lines, source URLs, descriptions and "listen for" bullets, plus `src/tracks/placeholderSonifier.ts` (a silent `Sonifier`) until the real mappings land. Both are registered in `src/tracks/index.ts` alongside lightning, so the track list is ready for the shell. `ignore` is empty with TODOs for T3.3.
+- 15:20 — Step 2, B: `src/components/About.tsx` added, static: how the sound is made, the pixels-not-data caveat, the SVS credits, and the AI-use note.
+- 15:20 — Step 2, B: accessibility baseline for the live region. `src/a11y/Announcer.tsx` renders the single `role="status"`, `aria-live="polite"` region, and `.sr-only` was added to `index.css`. ARCHITECTURE updated to say the shell mounts it. It is not mounted yet: `Jukebox.tsx` and `Player.tsx` (T1.4) are not on `main`, so T2.4 and mounting the Announcer are blocked on that merge.
+- Note: `public/media/ocean.mp4`/`ocean.jpg` and `nightlights.mp4`/`nightlights.jpg` are still outstanding (T3.2); the paths here fix those filenames. `npm run lint` and `npm run build` pass.

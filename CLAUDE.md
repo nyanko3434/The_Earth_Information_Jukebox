@@ -6,13 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Do not create commits.** Never run `git commit`, `git push` or anything else that writes history. When a piece of work reaches a sensible commit point, say so, list the files involved, and suggest a commit message; the user makes the commit. The suggested message must end with the `Co-Authored-By: Claude` trailer (see "Submission constraints").
 - **Keep the docs current.** If a change makes anything in `docs/` or this file untrue or incomplete — stack, folder layout, interfaces, rules, plan, scope, ownership, resource lists, commands — update that doc in the same piece of work, not later.
-- **Log the work.** Append an entry to `docs/PROJECT_LOG.md` whenever work is finished, a decision is made, scope is cut, or a plan changes. The format is described at the top of that file.
+- **Log the work.** Add an entry to `docs/PROJECT_LOG.md` whenever work is finished, a decision is made, scope is cut, or a plan changes. The log has one section per teammate: A's entries go at the end of the "A (Sound)" section, B's at the end of the file. The format is described at the top of that file.
+- **Edit shared docs only on your own lines.** `docs/BUILD_PLAN.md` has one progress line per teammate; update only the line of the role this session works for. Two branches editing the same line, or both adding at the end of the log, is what causes merge conflicts here.
 
 ## State of the repo
 
 Earth Jukebox is a NASA Space Apps Challenge 2026 entry ("The Earth Information Jukebox") by a team of two. Submission deadline: **2026-11-15 23:59 local**.
 
-The app is a React + Vite + TypeScript + Tone.js static site, deployed to GitHub Pages at <https://nyanko3434.github.io/The_Earth_Information_Jukebox/>. BUILD_PLAN.md has a "Progress" line naming the current step, and the latest entries in `docs/PROJECT_LOG.md` say where things stand, including a handoff note for the next step. Read both at the start of a session.
+The app is a React + Vite + TypeScript + Tone.js static site, deployed to GitHub Pages at <https://nyanko3434.github.io/The_Earth_Information_Jukebox/>. BUILD_PLAN.md has a "Progress" paragraph naming the current step, followed by one status line per teammate. `docs/PROJECT_LOG.md` says where things stand in more detail, in one section per teammate, each ending with that teammate's latest entries and handoff note. Read both at the start of a session.
 
 ## Commands
 
@@ -109,7 +110,7 @@ Work is split by path so two Claude Code sessions rarely touch the same files. `
 - **B (Experience):** `src/components/`, `src/a11y/`, styling, `src/tracks/*/track.ts`, `public/media/`, deployment workflow, README and submission.
 - **Shared:** `src/types.ts` and the interfaces in ARCHITECTURE.md change only when both teammates agree. Do not alter them unprompted.
 
-Branches are short-lived and merged to `main` several times a day.
+Branches are short-lived and merged to `main` several times a day. Each teammate works on their own branch, named `a/<topic>` or `b/<topic>`, cut from an up-to-date `dev`. Merge `origin/dev` into the branch before starting work and again before each commit point, so the other teammate's changes arrive in small pieces. If the session is on `dev` or `main` when work is about to start, say so and ask the user to create the branch.
 
 ## Submission constraints that affect code and commits
 
