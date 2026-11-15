@@ -215,6 +215,10 @@ How to check sound work: `npm run dev`, then the harness at `/The_Earth_Informat
 - 21:17 — DEPLOY 2: `a/clips-and-region` merged to `dev` and `dev` to `main` (PR #8, `1cf1a31`). Checked on the public URL in headless Chrome with the normal autoplay policy (bundle `index-Dw26oVfC.js`): five tracks listed; every clip and poster loads, `lightning2` and `lightning3` included; the legends list 6, 6, 6, 3 and 5 buttons; on each track a click turns the square on at the click, it stays inside the picture at the corners, the wheel stops at the full height and at the minimum (0.15 of the height, 0.57 on night lights) without scrolling the page, the picture keeps playing, a second click turns it off, a preset button takes over, Pause works with the square on; changing track turns the square off; one live region; no errors in the page log. The square keeps its size from one track to the next.
 - **Not verified:** the sound of the new clips and of a chosen area by ear, on the public site or anywhere else; touch; Firefox, a phone and a screen reader. As before, the output level cannot be measured on the production bundle.
 
+### AI-use note taken out of the app (21:44)
+
+- 21:44 — A: the "Use of AI" heading and paragraph removed from `src/components/About.tsx`. **Decision:** the acknowledgement is already made in the README's "Use of AI tools" section, in the `Co-Authored-By: Claude` commit trailers and in the submission form, so the app does not repeat it. This also removes the About section's sentence that the sound is not made by a generative AI model; the README and the form text still say it. `CLAUDE.md`, ARCHITECTURE ("AI-use attribution"), SUBMISSION ("AI use") and BUILD_PLAN (Step 5) updated to match. `npm run lint` and `npm run build` pass. Not deployed yet.
+
 ## B (Experience)
 
 B's entries from Step 1 on. B adds new entries at the end of the file.

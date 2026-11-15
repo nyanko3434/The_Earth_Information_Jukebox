@@ -250,7 +250,7 @@ Space Apps requires AI-generated code to be acknowledged in descriptive text and
 
 - The README has a "Use of AI tools" section saying what Claude was used for.
 - Keep the `Co-Authored-By: Claude` trailer on commits made with Claude Code.
-- The app's About section states that the sound is synthesised by our own rules at run time and is not produced by a generative AI model.
+- The same README section states that the sound is synthesised by our own rules at run time and is not produced by a generative AI model. The app's About section has no AI-use note; the README, the commit trailers and the submission form carry the acknowledgement.
 - Do not use the NASA logo or other NASA branding anywhere in the app, repo or demo.
 
 ## Deployment

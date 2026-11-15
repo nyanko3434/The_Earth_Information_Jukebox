@@ -118,7 +118,7 @@ Branches are short-lived and merged to `main` several times a day. Each teammate
 ## Submission constraints that affect code and commits
 
 - Commits containing Claude-written code carry the `Co-Authored-By: Claude` trailer; Space Apps requires AI-generated code to be acknowledged in metadata. Since the user makes the commits, include the trailer in every suggested commit message.
-- The README needs a "Use of AI tools" section, a mapping table, and credits. The app's About section must state that the sound is synthesised by the project's own rules at run time, not by a generative AI model.
+- The README needs a "Use of AI tools" section, a mapping table, and credits. That section also states that the sound is synthesised by the project's own rules at run time, not by a generative AI model. The app's About section carries no AI-use note (removed 2026-11-15; the README, the commit trailers and the form cover it).
 - No NASA logo, insignia or other NASA branding anywhere in the app, repo or demo. No AI-generated images or video.
 - Each track records its SVS source URL and credit line (as given on the SVS page) in `track.ts`, and the app shows both.
 - When a new library, font, icon set or NASA resource enters the repo, add it to the lists in `docs/SUBMISSION.md`.

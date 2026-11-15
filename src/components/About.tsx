@@ -27,13 +27,6 @@ export function About() {
         Currents and Temperature (SVS 3912), and Change in Night Lights 2012&ndash;2023 (SVS 5313).
         Each track shows its own credit line and a link to its source page.
       </p>
-
-      <h3>Use of AI</h3>
-      <p>
-        The planning documents and code were written with Claude (Anthropic) as an assistant. The
-        sound itself is synthesised at run time by rules written in this project; it is not produced
-        by a generative AI model. No AI-generated images or video are used.
-      </p>
     </section>
   );
 }

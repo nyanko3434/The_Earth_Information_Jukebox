@@ -63,7 +63,7 @@ The thinnest version of the whole pipeline, with no polish.
 
 - Audio legend buttons for each track.
 - "What you're hearing" panel driven by `describeNow`.
-- About section: how it works, the pixels-not-data caveat, credits, AI-use note.
+- About section: how it works, the pixels-not-data caveat, credits. (The AI-use note was removed on 2026-11-15; the README and the form carry it.)
 
 **Done when:** someone who has not seen the project can explain what one sound means after using the legend.
 

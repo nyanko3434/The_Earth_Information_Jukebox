@@ -133,7 +133,7 @@ We use Claude for planning and Claude Code for writing code. The form's rules fo
 | Rule | What we do |
 |---|---|
 | Code must acknowledge AI generation in descriptive text and metadata | "Use of AI tools" section in the README; keep the Claude co-author trailer on commits |
-| Audio must acknowledge AI generation in descriptive text and metadata | Our audio is synthesised by our own rules at run time, not by a generative AI model. Say this in the README and the About section, and note that the code doing it was written with AI assistance. |
+| Audio must acknowledge AI generation in descriptive text and metadata | Our audio is synthesised by our own rules at run time, not by a generative AI model. Say this in the README ("Use of AI tools") and in the form text, and note that the code doing it was written with AI assistance. The app's About section no longer repeats it. |
 | AI-generated images and videos need a visible watermark | Avoid AI-generated images and video entirely. The demo is a screen recording. |
 | No NASA branding in generated content | No NASA logo, flag or mission insignia in the app, repo or demo |
 
