@@ -256,6 +256,9 @@ export function createLightningSonifier(output: ToneAudioNode, options: Lightnin
     },
 
     pause() {
+      // Forget the last frame's glow: the next frame is a fresh start, so dots
+      // that are already there (or come into a newly chosen area) do not sound.
+      glowTime = -Infinity;
       if (!out || silent) return;
       silent = true;
       const at = immediate();

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createEngine } from '../audio/engine.ts'
 import type { Engine } from '../audio/engine.ts'
-import type { TrackDef } from '../types.ts'
+import type { Rect, TrackDef } from '../types.ts'
 import { Announcer } from '../a11y/Announcer.tsx'
 import { Legend } from './Legend.tsx'
 import { NowHearing } from './NowHearing.tsx'
 import { Player } from './Player.tsx'
+import { RegionPicker } from './RegionPicker.tsx'
+import { CUSTOM_REGION, MIN_SQUARE_WIDTH, REGION_PRESETS, regionPhrase } from './regions.ts'
+import type { RegionPreset } from './regions.ts'
 import { TrackList } from './TrackList.tsx'
 
 interface JukeboxProps {
@@ -15,6 +18,11 @@ interface JukeboxProps {
 const DESCRIPTION_ID = 'track-description'
 /** The "what you are hearing" sentence changes at most this often, so it can be read. */
 const HEARING_INTERVAL_MS = 500
+/**
+ * A moving square is passed to the engine once the pointer has rested this long.
+ * Each new area restarts the sonifier, so one per pointer move would stutter.
+ */
+const SQUARE_REST_MS = 150
 
 export function Jukebox({ tracks }: JukeboxProps) {
   const [selectedId, setSelectedId] = useState(tracks[0]?.id ?? '')
@@ -25,6 +33,14 @@ export function Jukebox({ tracks }: JukeboxProps) {
   // Also in state, so the legend (fixed for the life of an engine) renders once the engine exists.
   const [engine, setEngine] = useState<Engine | null>(null)
   const [hearing, setHearing] = useState('')
+  // The part of the picture that is turned into sound: a preset, or the square that follows the pointer.
+  const [regionId, setRegionId] = useState(REGION_PRESETS[0].id)
+  const [square, setSquare] = useState<Rect | null>(null)
+  const squareOn = regionId === CUSTOM_REGION
+  const region =
+    squareOn
+      ? square
+      : (REGION_PRESETS.find((preset) => preset.id === regionId)?.rect ?? null)
 
   const track = tracks.find((candidate) => candidate.id === selectedId) ?? tracks[0]
 
@@ -68,6 +84,33 @@ export function Jukebox({ tracks }: JukeboxProps) {
     }
   }, [track])
 
+  // A new engine (new track) listens to the whole picture until told otherwise.
+  useEffect(() => {
+    if (!engine) return
+    if (!squareOn) {
+      engine.setRegion(region)
+      return
+    }
+    const timer = window.setTimeout(() => engine.setRegion(region), SQUARE_REST_MS)
+    return () => window.clearTimeout(timer)
+  }, [engine, region, squareOn])
+
+  const choosePreset = useCallback((preset: RegionPreset) => {
+    setRegionId(preset.id)
+    setMessage(`Listening to ${preset.phrase}`)
+  }, [])
+
+  // A click on the picture turns the square on (with its first position) or off.
+  const toggleSquare = useCallback((rect: Rect | null) => {
+    const id = rect ? CUSTOM_REGION : REGION_PRESETS[0].id
+    if (rect) setSquare(rect)
+    setRegionId(id)
+    setMessage(`Listening to ${regionPhrase(id)}`)
+  }, [])
+
+  // Moves and resizes are shown and heard, but not announced.
+  const moveSquare = useCallback((rect: Rect) => setSquare(rect), [])
+
   const toggle = useCallback(() => {
     const engine = engineRef.current
     const video = videoRef.current
@@ -85,6 +128,7 @@ export function Jukebox({ tracks }: JukeboxProps) {
       if (id === selectedId) return
       engineRef.current?.pause()
       setSelectedId(id)
+      setRegionId(REGION_PRESETS[0].id)
       const next = tracks.find((candidate) => candidate.id === id)
       if (next) setMessage(`Track changed to ${next.title}`)
     },
@@ -140,6 +184,11 @@ export function Jukebox({ tracks }: JukeboxProps) {
           isPlaying={isPlaying}
           onToggle={toggle}
           descriptionId={DESCRIPTION_ID}
+          region={region}
+          squareOn={squareOn}
+          onSquareToggle={toggleSquare}
+          onSquareChange={moveSquare}
+          minSquareWidth={MIN_SQUARE_WIDTH[track.id] ?? 0}
         />
         <NowHearing text={hearing} />
         <p id={DESCRIPTION_ID}>{track.description}</p>
@@ -150,6 +199,7 @@ export function Jukebox({ tracks }: JukeboxProps) {
           ))}
         </ul>
         <Legend items={engine?.legend ?? []} />
+        <RegionPicker selectedId={regionId} onSelect={choosePreset} />
         <p className="credit">{track.credit}</p>
         <p>
           <a href={track.sourceUrl} target="_blank" rel="noreferrer">

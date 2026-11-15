@@ -225,6 +225,11 @@ function buildEngine() {
       },
     },
   });
+  // `?region=x,y,w,h` (0..1): listen to one rectangle of the picture, as the shell's area picker does.
+  const region = (params.get('region') ?? '').split(',').map(Number);
+  if (region.length === 4 && region.every(Number.isFinite)) {
+    engine.setRegion({ x: region[0], y: region[1], w: region[2], h: region[3] });
+  }
   engine.onFeatures(onFeatures);
   showLegend(engine);
 }

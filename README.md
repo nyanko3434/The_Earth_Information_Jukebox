@@ -12,10 +12,11 @@ Earth Information Center visualizations show how the planet is changing, but onl
 
 ## Using it
 
-1. Pick one of the three tracks.
+1. Pick one of the five tracks (three visualizations; the lightning one has three clips).
 2. Read what it shows and the "Listen for" notes.
 3. Press the buttons of the **audio legend**. Each plays one sound on its own and names what it means ("Lightning in the north", "Warm water", "A region that lost light"). They work before Play.
 4. Press **Play**. The line under the player, "What you are hearing", says in words what the sound is doing now.
+5. To hear one part of the picture only, press one of the buttons under "Listen to part of the picture" (left, right, top or bottom half, or the centre). With a mouse you can also click the picture: a square appears and follows the pointer, the wheel makes it larger or smaller, and a second click turns it off. Everything outside the area falls silent; "Whole picture" brings it back.
 
 Keyboard: Tab reaches every control, Space plays and pauses, Left and Right change track. Play state and track changes are announced through one polite live region.
 
@@ -37,7 +38,9 @@ A longer plain-language explanation is in [`docs/PICTURE_TO_SOUND.md`](docs/PICT
 
 ## What you hear: the mappings
 
-### Track 1: Lightning from the ISS
+### Track 1: Lightning from the ISS (three clips)
+
+Three clips of the same visualization share these rules: the opening, which follows the station along its orbit, and two later parts (2017 to 2018, and 2021 to 2023) in which each dot is lightning from a ten-day window and storms build and fade with the seasons. The later parts are much busier, and usually play at the limit of about 10 notes a second.
 
 The picture is the Earth seen from space, turning slowly, with lightning as small yellow dots. The app listens for cells that have just become more yellow (not just brighter: the white orbit line, clouds and stars stay silent).
 
@@ -85,6 +88,7 @@ Legend: a light in the north, a light in the south, a region that lost light, a 
 - **It reads the picture, not the science data.** The sound comes from the colours and brightness of the published videos. A note means "about this warm", not a measured temperature.
 - **It is coarse.** One cell covers a large area, and the ocean track averages a whole region into one note. You hear the large pattern, not a single storm.
 - **Lightning's left and right are the picture's**, not west and east on a map, because that visualization is a turning globe.
+- **A chosen area is part of the picture, not of the Earth.** On the turning globe of the lightning clips the same rectangle covers different places as time passes. The night lights pulse is set by the brightness of what is being listened to, so a small area plays fewer notes; ocean voices whose region lies outside the area are silent.
 - **Testing.** Built and checked in Chrome on Linux, by measurement in headless Chrome and by ear. Firefox, phones and screen readers have not been tested by us. The page was checked for accessible names on every control, one `main` landmark, one live region, heading order and text contrast (lowest 6.2:1), and for keyboard use.
 
 ## Run it locally
@@ -108,8 +112,8 @@ A dev-only page for the sound pipeline is at `/The_Earth_Information_Jukebox/src
 | `src/analysis/` | Frame to grid to measurements |
 | `src/audio/` | The engine the page calls, the master bus, the scale |
 | `src/tracks/<id>/` | Per track: `track.ts` (text, credit, source) and `sonifier.ts` (the rules) |
-| `src/components/`, `src/a11y/` | The page: track list, player, legend, "What you are hearing", About, live region |
-| `public/media/` | The three clips and their poster frames |
+| `src/components/`, `src/a11y/` | The page: track list, player, legend, "What you are hearing", the area picker, About, live region |
+| `public/media/` | The five clips and their poster frames |
 | `docs/` | Vision, architecture, build plan, project log, submission notes |
 
 ## Credits
@@ -118,7 +122,7 @@ The visualizations are from NASA's Scientific Visualization Studio, found throug
 
 | Track | Source | Credit |
 | --- | --- | --- |
-| Lightning from the ISS | [Lightning Events Detected from the ISS 2017-2023, SVS 5011](https://svs.gsfc.nasa.gov/5011/) | NASA's Scientific Visualization Studio — visualizers Michala Garrison (SSAI), Greg Shirah (NASA/GSFC), Kel Elkins (USRA) and Alex Kekesi (Global Science and Technology, Inc.) |
+| Lightning from the ISS (all three clips) | [Lightning Events Detected from the ISS 2017-2023, SVS 5011](https://svs.gsfc.nasa.gov/5011/) | NASA's Scientific Visualization Studio — visualizers Michala Garrison (SSAI), Greg Shirah (NASA/GSFC), Kel Elkins (USRA) and Alex Kekesi (Global Science and Technology, Inc.) |
 | Sea surface currents and temperature | [Global Sea Surface Currents and Temperature, SVS 3912](https://svs.gsfc.nasa.gov/3912/) | NASA/Goddard Space Flight Center Scientific Visualization Studio — animators Greg Shirah and Horace Mitchell (NASA/GSFC) and Eric Sokolowsky (Global Science and Technology, Inc.); producer Michael Starobin (HTSI); scientists Hong Zhang (UCLA) and Dimitris Menemenlis (NASA/JPL CalTech) |
 | Night lights 2012–2023 | [Change in Night Lights between 2012 and 2023 - EIC Version, SVS 5313](https://svs.gsfc.nasa.gov/5313/) | NASA's Scientific Visualization Studio — visualizer Kel Elkins (USRA); scientists Zhuosen Wang (University of Maryland), Miguel Román (Leidos), Ranjay Shrestha (SSAI), Srija Chakraborty (USRA) and Virginia Kalb (NASA) |
 
