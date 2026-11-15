@@ -32,6 +32,7 @@
       dd { margin: 0; }
       .views { display: flex; flex-wrap: wrap; gap: 1rem; }
       figure { margin: 0; }
+      #legend { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; margin: 0.25rem 0 0.75rem; }
       canvas { display: block; width: 19rem; image-rendering: pixelated; border: 1px solid #666; }
       #message { color: #a00000; }
     </style>
@@ -67,6 +68,8 @@
         <dt>now hearing</dt><dd id="describe">-</dd>
         <dt>output level</dt><dd id="level">-</dd>
       </dl>
+      <h2 id="legendHeading">Legend (each button plays one sound; works before Play)</h2>
+      <ul id="legend" aria-labelledby="legendHeading"></ul>
       <h2>Ocean voices</h2>
       <pre id="voices">-</pre>
 

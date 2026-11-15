@@ -29,7 +29,7 @@ npm run lint     # oxlint, configured in .oxlintrc.json
 
 There is no test runner. Type errors surface through `npm run build`, not through `npm run lint`. Sound is judged by ear on the deployed site (see WORK_DIVISION.md).
 
-To run the analysis and audio pipeline without the UI, start `npm run dev` and open the dev harness at `/The_Earth_Information_Jukebox/src/analysis/dev/harness.html`. It shows the live `FrameFeatures` and the output level, and plays the test tone, the lightning sonifier or the ocean sonifier. It is not part of the build. Clips in `src/analysis/dev/` are git-ignored; `bash src/analysis/dev/make-clips.sh` generates the three synthetic test clips (`standin.mp4`, `flashes.mp4`, `oceantest.mp4`). Choose with the URL, for example `?clip=flashes.mp4&sonifier=lightning`, or `?clip=media/ocean.mp4&sonifier=ocean` for a deployed clip in `public/media/`.
+To run the analysis and audio pipeline without the UI, start `npm run dev` and open the dev harness at `/The_Earth_Information_Jukebox/src/analysis/dev/harness.html`. It shows the live `FrameFeatures` and the output level, plays the test tone, the lightning sonifier or the ocean sonifier, and has a button for each legend sound of the chosen sonifier. It is not part of the build. Clips in `src/analysis/dev/` are git-ignored; `bash src/analysis/dev/make-clips.sh` generates the three synthetic test clips (`standin.mp4`, `flashes.mp4`, `oceantest.mp4`). Choose with the URL, for example `?clip=flashes.mp4&sonifier=lightning`, or `?clip=media/ocean.mp4&sonifier=ocean` for a deployed clip in `public/media/`.
 
 TypeScript settings from the template that reject otherwise ordinary code (`tsconfig.app.json`):
 
@@ -65,7 +65,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 ```
 
 - A shared engine (`src/analysis/`, `src/audio/`) reads frames; each track under `src/tracks/<id>/` supplies its own `track.ts` (metadata) and `sonifier.ts` (mapping).
-- The UI starts and stops all of this through one call, `createEngine({ video, track })` in `src/audio/engine.ts`, which returns `play()`, `pause()`, `onFeatures()` and `dispose()` (ARCHITECTURE, "Engine API").
+- The UI starts and stops all of this through one call, `createEngine({ video, track })` in `src/audio/engine.ts`, which returns `play()`, `pause()`, `onFeatures()`, `dispose()` and `legend`, the list the Legend component renders (ARCHITECTURE, "Engine API" and "Legend").
 - The UI reads the same `FrameFeatures` as the sonifier to drive the "what you're hearing" panel.
 - `src/types.ts` (`FrameFeatures`, `Sonifier`, `TrackDef`, `MediaDef`) is the only contract between the sound half and the UI half. Copy it exactly from ARCHITECTURE.md; derived values go in `src/analysis/helpers.ts`, not into `FrameFeatures`.
 - Tracks 1–3 (lightning, ocean, night lights) are videos. Track 4 (aerosols) is a stretch goal: a still image with a playhead sweeping left to right (`scanX`).
@@ -83,7 +83,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 - Start audio only from a user gesture (`await Tone.start()` in the Play handler).
 - Quantise every pitch to a scale (default pentatonic, `src/audio/scales.ts`), smooth continuous values (EMA or `rampTo` over 100–300 ms), and cap triggered notes at about 12 per second per track.
 - On flat world maps, longitude maps to stereo pan and latitude to pitch. The ocean track is the one exception for pitch: there pitch is temperature (VISION), and latitude chooses the voice. Pan is longitude in every track.
-- `pause()` must silence within 200 ms. No sound continues while the picture is paused. A sonifier's `start()` runs once, `pause()` keeps its nodes, and the next `update()` resumes the sound. The engine also mutes the master bus after the reverb on every pause, so do not route anything around the bus.
+- `pause()` must silence within 200 ms. No sound continues while the picture is paused, except a legend sound: one example under 2 s, played through `engine.legend`, which pauses the picture first. A sonifier's legend item plays on its own nodes, not through a gain that `pause()` closes (ARCHITECTURE, "Audio rules"). A sonifier's `start()` runs once, `pause()` keeps its nodes, and the next `update()` resumes the sound. The engine also mutes the master bus after the reverb on every pause, so do not route anything around the bus.
 - Everything routes through the single master bus.
 
 ### Accessibility (applies from the first commit, never cut)

@@ -131,6 +131,7 @@ export interface Engine {
   pause(): void;          // pauses the video; sound is silent within 200 ms
   onFeatures(cb: (f: FrameFeatures) => void): () => void; // every analysed frame; returns unsubscribe
   dispose(): void;        // on track change or unmount
+  readonly legend: LegendItem[]; // the track's audio legend; can be listed before Play (see "Legend")
 }
 
 export function createEngine(opts: {
@@ -145,6 +146,9 @@ In the shell:
 const engine = createEngine({ video: videoRef.current, track }); // in an effect; the cleanup calls engine.dispose()
 <button onClick={() => engine.play()}>Play</button>
 <button onClick={() => engine.pause()}>Pause</button>
+<ul>{engine.legend.map((item) => (
+  <li key={item.id}><button type="button" onClick={() => item.play()}>{item.label}</button></li>
+))}</ul>
 ```
 
 The lightning track uses `createSonifier: (output) => createLightningSonifier(output)`, from `src/tracks/lightning/sonifier.ts`; the ocean track uses `createSonifier: (output) => createOceanSonifier(output)`, from `src/tracks/ocean/sonifier.ts`. A track with no sonifier yet can use the test tone: `createSonifier: (output) => createTestTone(output)`, from `src/audio/testTone.ts`. The test tone is one sine: pitch follows `meanLuma`, and stereo position follows the horizontal centre of brightness, so something bright on the left of the picture is heard on the left.
@@ -154,12 +158,22 @@ The lightning track uses `createSonifier: (output) => createLightningSonifier(ou
 - The engine, not the sonifier, guarantees the pause rule: on every pause it mutes the master bus after the reverb (`setMasterAudible` in `master.ts`) and reopens it on the next analysed frame. A sonifier's own `pause()` still has to stop its notes, but a reverb tail or a slow release cannot leak.
 - One engine per track. On a track change, dispose the old engine and create a new one. If the video is already playing at that moment, call `play()` on the new engine, because the video's `play` event will not fire again.
 - `onFeatures` fires only while the video is playing, including when audio has not been unlocked.
-- No audio node is built before the first `play()`. Chrome still logs "The AudioContext was not allowed to start" at page load, because importing Tone creates its suspended context; that is expected, and `play()` resumes it.
+- No sound is possible before the first gesture. `createEngine` builds the master bus (four nodes) and creates the sonifier object, so that the legend can be listed, but they sit on Tone's suspended context; the sonifier's own nodes are built in its `start()`, on the first Play or legend press. Chrome still logs "The AudioContext was not allowed to start" at page load, because importing Tone creates that suspended context; that is expected, and the first gesture resumes it.
 - Video only for now. Still images (`scanX`) are added to the same function if Track 4 is built.
+
+### Legend
+
+Proposed by A on 2026-11-15, awaiting B's agreement. It adds the `legend` member above and changes nothing in `src/types.ts`.
+
+- `engine.legend` is the list for the Legend component: one `LegendItem` per sound, with the `id` and `label` the sonifier gave it. It is fixed for the life of the engine and is there as soon as `createEngine` returns, before Play. Since the engine is created in an effect, keep it in state (`useState<Engine | null>`), not only in a ref, so the list renders. A track on the test tone or the placeholder sonifier has an empty list.
+- Call `item.play()` directly in the button's click handler, with no `await` or timeout in front of it. The click is the user gesture: `play()` unlocks audio if Play has never been pressed, starts the sonifier if needed, and plays that one sound through the master bus.
+- A legend press pauses the picture, so the example is heard alone and not over the track. The video fires its own `pause` event, so the Play button and the live region follow as for any other pause. The legend press itself needs no announcement.
+- The UI never calls `createSonifier` or reads `sonifier.legend` itself.
+- The engine keeps the master bus open for 3 s after a legend press, then closes it again unless the picture is playing. A pause during those 3 s does not cut the example. One consequence: if the picture was playing when the button was pressed, the track's voices fade in 50 ms as usual, but its reverb tail dies away under the example instead of being cut (measured: 5 to 10 % of the track's level after 100 ms, about 2 % after 350 ms).
 
 ### Dev harness
 
-`src/analysis/dev/harness.html` runs the pipeline through `createEngine` without the UI shell, and shows the features the Analyser reports, the notes the lightning sonifier plays, what each of the ocean sonifier's six voices is doing, the output level at the left and right speaker, and each sonifier's `describeNow` sentence. A select switches between the test tone, the lightning sonifier and the ocean sonifier (which is run with the `ignore` rectangles from `src/tracks/ocean/track.ts`). With `npm run dev` it is at <http://localhost:5173/The_Earth_Information_Jukebox/src/analysis/dev/harness.html>. It is not linked from `index.html`, so it is left out of the build. Every `.mp4` in `src/analysis/dev/` is git-ignored. `bash src/analysis/dev/make-clips.sh` generates three synthetic ffmpeg test clips there, and its header says what each contains and should sound like: `standin.mp4` (brightness sweep, moving square, colour bars; for the test tone), `flashes.mp4` (flashes at known places and times on a static map; for the lightning sonifier) and `oceantest.mp4` (warm and cold halves that swap, then movement on one side only; for the ocean sonifier). The page loads `standin.mp4` unless the URL says otherwise: `?clip=flashes.mp4&sonifier=lightning`. A deployed clip is loaded from `public/media/` with `?clip=media/ocean.mp4&sonifier=ocean`. A local cut of real footage can be kept in the same folder and loaded with `?clip=`, or any file can be loaded with the page's file picker.
+`src/analysis/dev/harness.html` runs the pipeline through `createEngine` without the UI shell, and shows the features the Analyser reports, the notes the lightning sonifier plays, what each of the ocean sonifier's six voices is doing, the output level at the left and right speaker, and each sonifier's `describeNow` sentence. Its "Legend" row has one button per item of `engine.legend`, wired the way the shell should wire them, so legend sounds can be heard and measured before Play and without the UI shell. A select switches between the test tone, the lightning sonifier and the ocean sonifier (which is run with the `ignore` rectangles from `src/tracks/ocean/track.ts`). With `npm run dev` it is at <http://localhost:5173/The_Earth_Information_Jukebox/src/analysis/dev/harness.html>. It is not linked from `index.html`, so it is left out of the build. Every `.mp4` in `src/analysis/dev/` is git-ignored. `bash src/analysis/dev/make-clips.sh` generates three synthetic ffmpeg test clips there, and its header says what each contains and should sound like: `standin.mp4` (brightness sweep, moving square, colour bars; for the test tone), `flashes.mp4` (flashes at known places and times on a static map; for the lightning sonifier) and `oceantest.mp4` (warm and cold halves that swap, then movement on one side only; for the ocean sonifier). The page loads `standin.mp4` unless the URL says otherwise: `?clip=flashes.mp4&sonifier=lightning`. A deployed clip is loaded from `public/media/` with `?clip=media/ocean.mp4&sonifier=ocean`. A local cut of real footage can be kept in the same folder and loaded with `?clip=`, or any file can be loaded with the page's file picker.
 
 ## Analysis rules
 
@@ -182,7 +196,9 @@ The lightning track uses `createSonifier: (output) => createLightningSonifier(ou
 - Map longitude to stereo pan and latitude to pitch where the frame is a flat world map, so position means the same thing in every track.
 - The ocean track is the one exception to latitude as pitch. VISION gives its pitch to temperature (warm is low, cold is high), and the far south is cold, so both cannot hold. It keeps longitude as pan (west half left, east half right), and latitude chooses the voice: north, tropics and south each have their own.
 - The ocean sonifier holds six sustained voices and strikes the chord again every 4 s of picture (and at once after a pause or a seek). Its notes change only on a strike, which is 1.5 notes per second, and its continuous values (level, filter, shimmer) ramp over 300 ms.
-- `pause()` must silence within 200 ms. No sound may continue while the picture is paused.
+- `pause()` must silence within 200 ms. No sound may continue while the picture is paused. The one exception is a legend sound: a single example under 2 s, started by its own button (see "Legend" under "Engine API").
+- A sonifier's legend items follow these rules. `play()` is called only by the engine, after `start()`, and usually while the sonifier is paused, so the sound must not pass through a gain that `pause()` closes: give the legend its own node or nodes, connected to the same `output`. It must not depend on `update()`, it must be over within 2 s, and pressing a second item while the first sounds must not click. Compute the example with the same mapping functions as the live sound, so the legend cannot drift from the track. `dispose()` disposes the legend's nodes too.
+- Legend items written so far. Lightning: north (A5, centre), south (E3, centre), west (G4, left), east (G4, right), a small flash and a big flash (G4, centre, quiet and loud); each is one pluck. Ocean: warm water (A2, full), cold water (E5, thin), moving water (E4 with the shimmer at full strength); each swells in, holds for a second and fades, 1.6 s in all.
 - Sonifier lifecycle (proposed by A on 2026-11-14, awaiting B's agreement; no change to the types): `start()` is called once per sonifier; `pause()` silences but keeps the nodes; the next `update()` resumes the sound. The engine relies on this.
 - Schedule the silencing ramp in `pause()` at `Tone.immediate()`, not the default `Tone.now()`, which is 100 ms later.
 - The Step 1 test tone is the one exception to scale quantising: it is a diagnostic, and its pitch is continuous so that small brightness changes stay audible.
