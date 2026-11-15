@@ -56,7 +56,7 @@ src/
     ocean/
     nightlights/
     aerosols/            stretch
-  components/            Jukebox, TrackList, Player, Legend, NowHearing
+  components/            Jukebox, TrackList, Player, Legend, NowHearing, About
   a11y/                  live-region announcer, keyboard shortcuts
 docs/                    these planning files
 ```
@@ -212,7 +212,7 @@ These apply to every component from the first commit.
 - Semantic HTML: real `<button>`, `<ul>`, headings, one `<main>`.
 - Every control has an accessible name. The video has a text alternative (the track description).
 - Keyboard: Tab reaches everything, Space toggles play, Left/Right change track, visible focus ring.
-- One `aria-live="polite"` region announces track changes and play state. Do not announce every frame.
+- One `aria-live="polite"` region announces track changes and play state. Mount the shared `Announcer` (`src/a11y/Announcer.tsx`) once in the shell and give it the current message. Do not announce every frame.
 - The audio legend is a list of buttons, each of which plays one sound and names what it means.
 - Text contrast meets WCAG AA. Respect `prefers-reduced-motion`.
 - Nothing depends on colour alone.
