@@ -13,7 +13,7 @@ export function About() {
         that image and turn them into notes: brightness, colour and movement become pitch, harmony
         and rhythm. Nothing is pre-recorded. Pause the picture and the sound stops; the sound and
         the picture always run together. You can also listen to one part of the picture: choose an
-        area under the legend, or drag a rectangle on the picture.
+        area under the legend, or click the picture and move the square that appears.
       </p>
       <p>
         We sonify the rendered pixels of the visualization, not the original science data. The

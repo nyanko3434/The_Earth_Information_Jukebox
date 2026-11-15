@@ -16,7 +16,7 @@ Earth Information Center visualizations show how the planet is changing, but onl
 2. Read what it shows and the "Listen for" notes.
 3. Press the buttons of the **audio legend**. Each plays one sound on its own and names what it means ("Lightning in the north", "Warm water", "A region that lost light"). They work before Play.
 4. Press **Play**. The line under the player, "What you are hearing", says in words what the sound is doing now.
-5. To hear one part of the picture only, press one of the buttons under "Listen to part of the picture" (left, right, top or bottom half, or the centre), or drag a rectangle on the picture. Everything outside the area falls silent; "Whole picture" brings it back.
+5. To hear one part of the picture only, press one of the buttons under "Listen to part of the picture" (left, right, top or bottom half, or the centre). With a mouse you can also click the picture: a square appears and follows the pointer, the wheel makes it larger or smaller, and a second click turns it off. Everything outside the area falls silent; "Whole picture" brings it back.
 
 Keyboard: Tab reaches every control, Space plays and pauses, Left and Right change track. Play state and track changes are announced through one polite live region.
 

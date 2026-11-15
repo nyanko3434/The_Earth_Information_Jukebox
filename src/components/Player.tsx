@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { PointerEvent, RefObject } from 'react'
 import type { Rect, TrackDef } from '../types.ts'
 
@@ -8,21 +8,32 @@ interface PlayerProps {
   isPlaying: boolean
   onToggle: () => void
   descriptionId: string
-  /** The part of the picture being listened to; null is the whole picture. */
+  /** The part of the picture being listened to, drawn as an outline; null is the whole picture. */
   region: Rect | null
-  /** Called when the visitor has drawn a rectangle on the picture. */
-  onRegionDrawn: (rect: Rect) => void
+  /** Whether the square that follows the pointer is on. */
+  squareOn: boolean
+  /** A click on the picture: the square to turn on, or null to turn it off. */
+  onSquareToggle: (rect: Rect | null) => void
+  /** The square has moved or changed size. Called on every pointer move while it is on. */
+  onSquareChange: (rect: Rect) => void
 }
 
+/** The square's side as a fraction of the picture's height, when first turned on. */
+const START_SIDE = 0.5
+/** Smallest side, as a fraction of the picture's height. */
+const MIN_SIDE = 0.3
 /**
- * A drawn rectangle smaller than this is taken for a slip of the hand and
- * ignored. The width is also kept above the span the night lights sonifier
- * reads as a zoomed view (0.15 of the picture).
+ * The square is also never narrower than this fraction of the picture's width:
+ * under 0.15 the night lights sonifier takes a masked area for a zoomed view.
  */
 const MIN_WIDTH = 0.16
-const MIN_HEIGHT = 0.1
+/** One notch of the wheel changes the side by this factor. */
+const WHEEL_STEP = 1.1
+/** A press and release within this many pixels is a click; farther is a drag. */
+const CLICK_SLOP_PX = 6
 
 const percent = (value: number) => `${value * 100}%`
+const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value))
 
 export function Player({
   track,
@@ -31,72 +42,106 @@ export function Player({
   onToggle,
   descriptionId,
   region,
-  onRegionDrawn,
+  squareOn,
+  onSquareToggle,
+  onSquareChange,
 }: PlayerProps) {
   const poster = track.media.kind === 'video' ? track.media.poster : undefined
   const pictureRef = useRef<HTMLDivElement>(null)
-  const startRef = useRef<{ x: number; y: number } | null>(null)
-  const [drawing, setDrawing] = useState<Rect | null>(null)
+  // The square: its centre in 0..1 of the picture, and its side as a fraction of the height.
+  const centreRef = useRef({ x: 0.5, y: 0.5 })
+  const sideRef = useRef(START_SIDE)
+  // Where a press began, to tell a click from a drag.
+  const downRef = useRef<{ x: number; y: number } | null>(null)
 
-  /** Where the pointer is, as 0..1 of the picture's width and height. */
-  const place = (event: PointerEvent) => {
+  /** The square as a rectangle in 0..1, a true square on screen, kept inside the picture. */
+  const squareRect = (): Rect | null => {
     const box = pictureRef.current?.getBoundingClientRect()
     if (!box || box.width === 0 || box.height === 0) return null
+    const aspect = box.width / box.height
+    const largest = Math.min(1, aspect)
+    const smallest = Math.min(largest, Math.max(MIN_SIDE, MIN_WIDTH * aspect))
+    const h = clamp(sideRef.current, smallest, largest)
+    sideRef.current = h
+    const w = h / aspect
     return {
-      x: Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)),
-      y: Math.min(1, Math.max(0, (event.clientY - box.top) / box.height)),
+      x: clamp(centreRef.current.x - w / 2, 0, 1 - w),
+      y: clamp(centreRef.current.y - h / 2, 0, 1 - h),
+      w,
+      h,
+    }
+  }
+
+  /** Moves the square's centre to the pointer. */
+  const follow = (event: PointerEvent) => {
+    const box = pictureRef.current?.getBoundingClientRect()
+    if (!box || box.width === 0 || box.height === 0) return
+    centreRef.current = {
+      x: clamp((event.clientX - box.left) / box.width, 0, 1),
+      y: clamp((event.clientY - box.top) / box.height, 0, 1),
     }
   }
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return
-    const at = place(event)
-    if (!at) return
-    startRef.current = at
-    event.currentTarget.setPointerCapture(event.pointerId)
-  }
-
-  /** The rectangle from where the drag began to where the pointer is now. */
-  const drawnTo = (event: PointerEvent): Rect | null => {
-    const start = startRef.current
-    const at = place(event)
-    if (!start || !at) return null
-    return {
-      x: Math.min(start.x, at.x),
-      y: Math.min(start.y, at.y),
-      w: Math.abs(at.x - start.x),
-      h: Math.abs(at.y - start.y),
-    }
+    downRef.current = { x: event.clientX, y: event.clientY }
+    // A finger moves the square by dragging, also past the picture's edge.
+    if (squareOn) event.currentTarget.setPointerCapture(event.pointerId)
   }
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const rect = drawnTo(event)
-    if (rect) setDrawing(rect)
+    if (!squareOn) return
+    // A mouse moves it by hovering; a finger or pen only while it is down.
+    if (event.pointerType !== 'mouse' && !downRef.current) return
+    follow(event)
+    const rect = squareRect()
+    if (rect) onSquareChange(rect)
   }
 
-  // Measured from the release itself: the last move may not have been drawn yet.
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    const rect = drawnTo(event)
-    if (rect && rect.w >= MIN_WIDTH && rect.h >= MIN_HEIGHT) onRegionDrawn(rect)
-    cancel()
+    const down = downRef.current
+    downRef.current = null
+    if (!down) return
+    if (Math.hypot(event.clientX - down.x, event.clientY - down.y) > CLICK_SLOP_PX) return
+    if (squareOn) {
+      onSquareToggle(null)
+      return
+    }
+    follow(event)
+    const rect = squareRect()
+    if (rect) onSquareToggle(rect)
   }
 
-  const cancel = () => {
-    startRef.current = null
-    setDrawing(null)
-  }
-
-  const shown = drawing ?? region
+  // The wheel changes the square's size. A native listener, because it has to
+  // stop the page from scrolling and React's wheel handler is not allowed to.
+  // Only attached while the square is on, so the page scrolls as usual otherwise.
+  useEffect(() => {
+    const picture = pictureRef.current
+    if (!squareOn || !picture) return
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      if (event.deltaY === 0) return
+      sideRef.current *= event.deltaY < 0 ? WHEEL_STEP : 1 / WHEEL_STEP
+      const rect = squareRect()
+      if (rect) onSquareChange(rect)
+    }
+    picture.addEventListener('wheel', onWheel, { passive: false })
+    return () => picture.removeEventListener('wheel', onWheel)
+    // squareRect reads only refs, so it need not be a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [squareOn, onSquareChange])
 
   return (
     <div className="player">
       <div
         ref={pictureRef}
-        className="player-picture"
+        className={squareOn ? 'player-picture player-picture-square' : 'player-picture'}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        onPointerCancel={cancel}
+        onPointerCancel={() => {
+          downRef.current = null
+        }}
       >
         <video
           ref={videoRef}
@@ -108,16 +153,16 @@ export function Player({
           aria-label={`Visualization: ${track.title}`}
           aria-describedby={descriptionId}
         />
-        {shown && (
+        {region && (
           // Decoration only: the chosen area is named in text by the RegionPicker.
           <div
             className="region-outline"
             aria-hidden="true"
             style={{
-              left: percent(shown.x),
-              top: percent(shown.y),
-              width: percent(shown.w),
-              height: percent(shown.h),
+              left: percent(region.x),
+              top: percent(region.y),
+              width: percent(region.w),
+              height: percent(region.h),
             }}
           />
         )}

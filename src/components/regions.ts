@@ -19,10 +19,10 @@ export const REGION_PRESETS: RegionPreset[] = [
   { id: 'centre', label: 'Centre', phrase: 'the centre of the picture', rect: { x: 0.25, y: 0.25, w: 0.5, h: 0.5 } },
 ]
 
-/** Stands for an area drawn by hand on the picture. */
+/** Stands for the square that follows the pointer over the picture. */
 export const CUSTOM_REGION = 'custom'
 
-/** "Listening to …" for a preset id or a hand-drawn area. */
+/** "Listening to …" for a preset id or the square. */
 export function regionPhrase(id: string): string {
-  return REGION_PRESETS.find((preset) => preset.id === id)?.phrase ?? 'the area you drew on the picture'
+  return REGION_PRESETS.find((preset) => preset.id === id)?.phrase ?? 'a square on the picture'
 }

@@ -18,6 +18,11 @@ interface JukeboxProps {
 const DESCRIPTION_ID = 'track-description'
 /** The "what you are hearing" sentence changes at most this often, so it can be read. */
 const HEARING_INTERVAL_MS = 500
+/**
+ * A moving square is passed to the engine once the pointer has rested this long.
+ * Each new area restarts the sonifier, so one per pointer move would stutter.
+ */
+const SQUARE_REST_MS = 150
 
 export function Jukebox({ tracks }: JukeboxProps) {
   const [selectedId, setSelectedId] = useState(tracks[0]?.id ?? '')
@@ -28,12 +33,13 @@ export function Jukebox({ tracks }: JukeboxProps) {
   // Also in state, so the legend (fixed for the life of an engine) renders once the engine exists.
   const [engine, setEngine] = useState<Engine | null>(null)
   const [hearing, setHearing] = useState('')
-  // The part of the picture that is turned into sound: a preset, or a rectangle drawn on the picture.
+  // The part of the picture that is turned into sound: a preset, or the square that follows the pointer.
   const [regionId, setRegionId] = useState(REGION_PRESETS[0].id)
-  const [drawnRegion, setDrawnRegion] = useState<Rect | null>(null)
+  const [square, setSquare] = useState<Rect | null>(null)
+  const squareOn = regionId === CUSTOM_REGION
   const region =
-    regionId === CUSTOM_REGION
-      ? drawnRegion
+    squareOn
+      ? square
       : (REGION_PRESETS.find((preset) => preset.id === regionId)?.rect ?? null)
 
   const track = tracks.find((candidate) => candidate.id === selectedId) ?? tracks[0]
@@ -80,19 +86,30 @@ export function Jukebox({ tracks }: JukeboxProps) {
 
   // A new engine (new track) listens to the whole picture until told otherwise.
   useEffect(() => {
-    engine?.setRegion(region)
-  }, [engine, region])
+    if (!engine) return
+    if (!squareOn) {
+      engine.setRegion(region)
+      return
+    }
+    const timer = window.setTimeout(() => engine.setRegion(region), SQUARE_REST_MS)
+    return () => window.clearTimeout(timer)
+  }, [engine, region, squareOn])
 
   const choosePreset = useCallback((preset: RegionPreset) => {
     setRegionId(preset.id)
     setMessage(`Listening to ${preset.phrase}`)
   }, [])
 
-  const drawRegion = useCallback((rect: Rect) => {
-    setDrawnRegion(rect)
-    setRegionId(CUSTOM_REGION)
-    setMessage(`Listening to ${regionPhrase(CUSTOM_REGION)}`)
+  // A click on the picture turns the square on (with its first position) or off.
+  const toggleSquare = useCallback((rect: Rect | null) => {
+    const id = rect ? CUSTOM_REGION : REGION_PRESETS[0].id
+    if (rect) setSquare(rect)
+    setRegionId(id)
+    setMessage(`Listening to ${regionPhrase(id)}`)
   }, [])
+
+  // Moves and resizes are shown and heard, but not announced.
+  const moveSquare = useCallback((rect: Rect) => setSquare(rect), [])
 
   const toggle = useCallback(() => {
     const engine = engineRef.current
@@ -168,7 +185,9 @@ export function Jukebox({ tracks }: JukeboxProps) {
           onToggle={toggle}
           descriptionId={DESCRIPTION_ID}
           region={region}
-          onRegionDrawn={drawRegion}
+          squareOn={squareOn}
+          onSquareToggle={toggleSquare}
+          onSquareChange={moveSquare}
         />
         <NowHearing text={hearing} />
         <p id={DESCRIPTION_ID}>{track.description}</p>

@@ -131,15 +131,20 @@ button[aria-pressed='true'] {
   margin: 1rem 0;
 }
 
-/* The picture, with the chosen area drawn over it. Dragging on it draws a new area. */
+/* The picture, with the chosen area drawn over it. A click turns the listening square on and off. */
 .player-picture {
   position: relative;
   width: 100%;
   overflow: hidden;
   border-radius: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* While the square is on, a finger moves it and does not scroll the page. */
+.player-picture-square {
   cursor: crosshair;
   touch-action: none;
-  user-select: none;
 }
 
 /* White line with a black edge, so it shows on any picture; the rest is dimmed. */

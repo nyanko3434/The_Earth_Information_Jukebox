@@ -50,7 +50,7 @@ Track 4 is a stretch goal because its source is a single still image, so it need
 **Committed**
 
 - Three tracks (1–3), each with its own ruleset.
-- Added on 2026-11-15: two more clips of Track 1, played by the same ruleset (five entries in the track list), and listening to one part of the picture, chosen with buttons or by dragging a rectangle on it.
+- Added on 2026-11-15: two more clips of Track 1, played by the same ruleset (five entries in the track list), and listening to one part of the picture, chosen with buttons, or with a square that is turned on by clicking the picture, follows the pointer and is resized with the mouse wheel.
 - Jukebox interface: track list, player, description, audio legend, "what you're hearing" panel.
 - Keyboard and screen-reader support throughout.
 - Public deployed site, public repository, 30-second demo video.
