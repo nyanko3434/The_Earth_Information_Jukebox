@@ -105,6 +105,8 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 
 ## Ownership and collaboration
 
+**From 2026-11-15 at about 18:50 A (`nyanko3434`) works alone and owns every path**, including B's below; B is no longer available. The rest of this section describes the split until then, and its rule against editing the other role's paths no longer applies.
+
 Work is split by path so two Claude Code sessions rarely touch the same files. `docs/WORK_DIVISION.md` records who holds which role (A is `nyanko3434`); match it against the git user to know whose session this is, and ask if it is unclear. Stay inside that role's paths. If the task needs a change in the other role's area, say so and let the user raise it with their teammate; do not make the edit.
 
 - **A (Sound):** `src/analysis/`, `src/audio/`, `src/tracks/*/sonifier.ts` (except night lights, which B writes).

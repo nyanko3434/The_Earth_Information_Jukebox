@@ -46,7 +46,8 @@ const REFRACTORY_SECONDS = 1;
 const MAX_FRAME_GAP_SECONDS = 1;
 const NOTE_SECONDS = 0.1;
 const VOICE_COUNT = 8;
-const LEVEL = 0.8;
+/** Above 1: short plucks need it to sit level with the ocean track's chord (volume balance of 2026-11-15). */
+const LEVEL = 1.6;
 const FADE_SECONDS = 0.05;
 
 export interface LightningNote {

@@ -27,7 +27,8 @@ const PAN_WIDTH = 0.8;
 const NOTE_SECONDS = 0.12;
 const GLIDE_SECONDS = 0.1;
 const VOICE_COUNT = 10;
-const LEVEL = 0.8;
+/** Above 1: short notes need it to sit level with the ocean track's chord (volume balance of 2026-11-15). */
+const LEVEL = 1.6;
 const FADE_SECONDS = 0.05;
 const SMOOTH_SECONDS = 0.3;
 /** A cell at least this bright can carry a note or count towards a zoom. */
@@ -79,6 +80,85 @@ function clamp01(x: number): number {
   return Math.min(1, Math.max(0, x));
 }
 
+// ---- Legend. Each example is a place on the map, with or without a direction,
+// and goes through the same mapping as a live note. ----
+/** Heights for the examples, each in the middle of one note's band: G5 in the north, C5 in the middle, E4 in the south. */
+const NORTH_Y = 0.2;
+const MIDDLE_Y = 0.5;
+const SOUTH_Y = 0.8;
+/** The brightness of an ordinary lit cell: loudness about 0.6. */
+const LEGEND_LUMA = 0.2;
+const LEGEND_EXAMPLES: { id: string; label: string; y: number; direction: -1 | 0 | 1; zoom?: boolean }[] = [
+  { id: 'north', label: 'A light in the north', y: NORTH_Y, direction: 0 },
+  { id: 'south', label: 'A light in the south', y: SOUTH_Y, direction: 0 },
+  { id: 'lost', label: 'A region that lost light', y: MIDDLE_Y, direction: -1 },
+  { id: 'gained', label: 'A region that gained light', y: MIDDLE_Y, direction: 1 },
+  { id: 'zoom', label: 'A zoomed-in view', y: MIDDLE_Y, direction: 0, zoom: true },
+];
+
+interface PlannedNote {
+  hz: number;
+  /** Where a rising or falling note starts; equal to hz for a steady one. */
+  fromHz: number;
+  pan: number;
+  velocity: number;
+}
+
+function panFor(x: number): number {
+  return x * 2 * PAN_WIDTH - PAN_WIDTH;
+}
+
+/** The note for a lit cell at (x, y), both 0..1 from the top left, of the given brightness and direction. */
+function noteFor(x: number, y: number, luma: number, direction: -1 | 0 | 1): PlannedNote {
+  // North (the top) is high.
+  const unit = clamp01(1 - y);
+  // Rise from below, or fall from above, by two scale steps, so the direction
+  // is heard as movement rather than as a different note.
+  const fromUnit = clamp01(unit - direction * 2 * NIGHTLIGHTS_STEP);
+  return {
+    hz: scaleHz(unit, PITCH_RANGE),
+    fromHz: scaleHz(fromUnit, PITCH_RANGE),
+    pan: panFor(x),
+    velocity: clamp01(0.25 + 0.75 * Math.min(1, luma / 0.4)),
+  };
+}
+
+/** The three rising notes that mark a zoom, from the height of the zoomed region. */
+function zoomPhraseHz(y: number): number[] {
+  const baseUnit = clamp01(1 - y);
+  return Array.from({ length: ZOOM_PHRASE_NOTES }, (_, step) =>
+    scaleHz(clamp01(baseUnit + step * NIGHTLIGHTS_STEP), PITCH_RANGE),
+  );
+}
+const ZOOM_PHRASE_VELOCITY = 0.5;
+
+function makeVoice(destination: ToneAudioNode): Voice {
+  const panner = new Panner(0).connect(destination);
+  const synth = new Synth({
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.004, decay: 0.16, sustain: 0, release: 0.14 },
+  }).connect(panner);
+  return { synth, panner };
+}
+
+function playNote(voice: Voice, note: PlannedNote, at: number): void {
+  voice.panner.pan.setValueAtTime(note.pan, at);
+  if (note.fromHz === note.hz) {
+    voice.synth.triggerAttackRelease(note.hz, NOTE_SECONDS, at, note.velocity);
+  } else {
+    voice.synth.triggerAttack(note.fromHz, at, note.velocity);
+    voice.synth.frequency.exponentialRampTo(note.hz, GLIDE_SECONDS, at);
+    voice.synth.triggerRelease(at + NOTE_SECONDS);
+  }
+}
+
+function playZoomPhrase(voice: Voice, hzs: number[], pan: number, at: number): void {
+  voice.panner.pan.setValueAtTime(pan, at);
+  hzs.forEach((hz, step) => {
+    voice.synth.triggerAttackRelease(hz, NOTE_SECONDS, at + step * ZOOM_PHRASE_STEP_SECONDS, ZOOM_PHRASE_VELOCITY);
+  });
+}
+
 /** Brightness 0..1 as a note rate. Exported so the rate can be checked without audio. */
 export function nightlightsRate(brightness: number): number {
   return MIN_RATE + (MAX_RATE - MIN_RATE) * clamp01(brightness);
@@ -96,6 +176,23 @@ export function createNightlightsSonifier(output: ToneAudioNode, options: Nightl
   let pick = 0.5;
   let wasZoom = false;
 
+  // The legend's own voice, built the first time a legend button is pressed.
+  let legendVoice: (Voice & { gain: Gain }) | null = null;
+
+  const playExample = (example: (typeof LEGEND_EXAMPLES)[number]) => {
+    if (!legendVoice) {
+      // Its own way to the output: the main gain is closed while the picture is paused.
+      const gain = new Gain(LEVEL).connect(output);
+      legendVoice = { ...makeVoice(gain), gain };
+    }
+    const at = now();
+    // Drop whatever an earlier example still had scheduled (the rest of a phrase, a glide).
+    legendVoice.synth.envelope.cancel(at);
+    legendVoice.synth.frequency.cancelScheduledValues(at);
+    if (example.zoom) playZoomPhrase(legendVoice, zoomPhraseHz(example.y), panFor(0.5), at);
+    else playNote(legendVoice, noteFor(0.5, example.y, LEGEND_LUMA, example.direction), at);
+  };
+
   const trigger = (
     f: FrameFeatures,
     cell: number,
@@ -105,36 +202,16 @@ export function createNightlightsSonifier(output: ToneAudioNode, options: Nightl
   ) => {
     const voice = voices[nextVoice];
     nextVoice = (nextVoice + 1) % voices.length;
-    const rows = f.rows;
-    const cols = f.cols;
-    const row = Math.floor(cell / cols);
-    const col = cell % cols;
-    // North (row 0) is high.
-    const unit = clamp01(1 - (row + 0.5) / rows);
-    const pan = ((col + 0.5) / cols) * 2 * PAN_WIDTH - PAN_WIDTH;
-    const luma = f.luma[cell];
-    const velocity = clamp01(0.25 + 0.75 * Math.min(1, luma / 0.4));
-
-    const hz = scaleHz(unit, PITCH_RANGE);
-    const at = now() + delay;
-    voice.panner.pan.setValueAtTime(pan, at);
-    if (direction === 0) {
-      voice.synth.triggerAttackRelease(hz, NOTE_SECONDS, at, velocity);
-    } else {
-      // Rise from below, or fall from above, by two scale steps, so the direction
-      // is heard as movement rather than as a different note.
-      const fromUnit = clamp01(unit - direction * 2 * NIGHTLIGHTS_STEP);
-      const fromHz = scaleHz(fromUnit, PITCH_RANGE);
-      voice.synth.triggerAttack(fromHz, at, velocity);
-      voice.synth.frequency.exponentialRampTo(hz, GLIDE_SECONDS, at);
-      voice.synth.triggerRelease(at + NOTE_SECONDS);
-    }
+    const row = Math.floor(cell / f.cols);
+    const col = cell % f.cols;
+    const note = noteFor((col + 0.5) / f.cols, (row + 0.5) / f.rows, f.luma[cell], direction);
+    playNote(voice, note, now() + delay);
 
     options.onNote?.({
       time: f.time,
-      hz,
-      pan,
-      velocity,
+      hz: note.hz,
+      pan: note.pan,
+      velocity: note.velocity,
       direction,
       zoomPhrase,
     });
@@ -182,20 +259,17 @@ export function createNightlightsSonifier(output: ToneAudioNode, options: Nightl
     changeView ? directionAt(f, cell) : 0;
 
   return {
-    legend: [],
+    legend: LEGEND_EXAMPLES.map((example) => ({
+      id: example.id,
+      label: example.label,
+      play: () => playExample(example),
+    })),
 
     start() {
       if (out) return;
       const bus = new Gain(0).connect(output);
       out = bus;
-      voices = Array.from({ length: VOICE_COUNT }, () => {
-        const panner = new Panner(0).connect(bus);
-        const synth = new Synth({
-          oscillator: { type: 'triangle' },
-          envelope: { attack: 0.004, decay: 0.16, sustain: 0, release: 0.14 },
-        }).connect(panner);
-        return { synth, panner };
-      });
+      voices = Array.from({ length: VOICE_COUNT }, () => makeVoice(bus));
     },
 
     update(f: FrameFeatures) {
@@ -252,24 +326,17 @@ export function createNightlightsSonifier(output: ToneAudioNode, options: Nightl
         // Entering a zoom: a short rising phrase from the zoomed region, panned to it.
         const meanRow = zoomRowSum / zoomCells;
         const meanCol = zoomColSum / zoomCells;
-        const baseUnit = clamp01(1 - (meanRow + 0.5) / f.rows);
-        const pan = ((meanCol + 0.5) / f.cols) * 2 * PAN_WIDTH - PAN_WIDTH;
+        const hzs = zoomPhraseHz((meanRow + 0.5) / f.rows);
+        const pan = panFor((meanCol + 0.5) / f.cols);
         const voice = voices[nextVoice];
         nextVoice = (nextVoice + 1) % voices.length;
-        voice.panner.pan.setValueAtTime(pan, now());
-        for (let step = 0; step < ZOOM_PHRASE_NOTES; step++) {
-          const hz = scaleHz(clamp01(baseUnit + step * NIGHTLIGHTS_STEP), PITCH_RANGE);
-          voice.synth.triggerAttackRelease(
-            hz,
-            NOTE_SECONDS,
-            now() + step * ZOOM_PHRASE_STEP_SECONDS,
-            0.5,
-          );
+        playZoomPhrase(voice, hzs, pan, now());
+        for (const hz of hzs) {
           options.onNote?.({
             time: f.time,
             hz,
             pan,
-            velocity: 0.5,
+            velocity: ZOOM_PHRASE_VELOCITY,
             direction: 1,
             zoomPhrase: true,
           });
@@ -297,13 +364,20 @@ export function createNightlightsSonifier(output: ToneAudioNode, options: Nightl
     },
 
     dispose() {
-      if (!out) return;
-      const nodes = [out, ...voices.flatMap((v) => [v.synth, v.panner])];
-      out.gain.rampTo(0, FADE_SECONDS, immediate());
-      out = null;
-      voices = [];
-      silent = true;
-      hasFrame = false;
+      const nodes: ToneAudioNode[] = [];
+      if (legendVoice) {
+        legendVoice.gain.gain.rampTo(0, FADE_SECONDS, immediate());
+        nodes.push(legendVoice.synth, legendVoice.panner, legendVoice.gain);
+        legendVoice = null;
+      }
+      if (out) {
+        out.gain.rampTo(0, FADE_SECONDS, immediate());
+        nodes.push(out, ...voices.flatMap((v) => [v.synth, v.panner]));
+        out = null;
+        voices = [];
+        silent = true;
+        hasFrame = false;
+      }
       // Let the fade finish before the nodes go, to avoid a click.
       setTimeout(() => nodes.forEach((n) => n.dispose()), 2 * FADE_SECONDS * 1000);
     },

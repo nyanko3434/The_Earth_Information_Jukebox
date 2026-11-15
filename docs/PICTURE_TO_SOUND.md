@@ -115,6 +115,16 @@ The change map in this clip is mostly orange, so falling tones dominate that sec
 
 **What you hear in this clip.** The annual averages are sparse and calm, a few notes a second. When the change map arrives the map is brighter and more colourful, so the notes come faster and the falling tones appear. Each zoom into a city region answers with a quick rising phrase.
 
+**Legend.** Five buttons:
+
+| Button | What it plays |
+| --- | --- |
+| A light in the north | One short high note |
+| A light in the south | One short low note |
+| A region that lost light | A note that falls |
+| A region that gained light | A note that rises |
+| A zoomed-in view | Three quick rising notes |
+
 **One difference from the other two.** This track has no single voice that holds a note: it is a pulse of short notes, and the overall brightness sets the pulse's speed.
 
 ## What it does not do
