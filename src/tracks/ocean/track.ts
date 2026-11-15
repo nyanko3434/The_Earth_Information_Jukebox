@@ -20,8 +20,8 @@ export const oceanTrack: TrackDef = {
     'Movement in the currents adds a shimmer.',
   ],
   grid: { cols: 64, rows: 32 },
-  // TODO(B, T3.3): blank out on-screen dates and the temperature colorbar once the clip exists.
-  ignore: [],
+  // The temperature colorbar and its labels occupy the bottom ~16% of the frame, and are static.
+  ignore: [{ x: 0, y: 0.84, w: 1, h: 0.16 }],
   createSonifier: createPlaceholderSonifier,
 };
 

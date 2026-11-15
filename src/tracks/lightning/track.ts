@@ -21,7 +21,7 @@ export const lightningTrack: TrackDef = {
     'A louder note means a bigger flash.',
   ],
   grid: { cols: 64, rows: 32 },
-  // TODO(B, T3.3): blank out on-screen dates and colourbars once the clip exists.
+  // TODO(B): the clip (T1.1) is still missing, so overlays cannot be inspected yet.
   ignore: [],
   createSonifier: (output) => createTestTone(output),
 };

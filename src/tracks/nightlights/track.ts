@@ -19,8 +19,8 @@ export const nightlightsTrack: TrackDef = {
     'A rising tone marks a region that gained light; a falling tone marks one that lost it.',
   ],
   grid: { cols: 64, rows: 32 },
-  // TODO(B, T3.3): blank out captions and zoom-ins once the clip exists; the EIC source is 32:9, so the grid may need widening.
-  ignore: [],
+  // The bottom ~12% is a static grey band with no map content; blank it so it cannot drive notes.
+  ignore: [{ x: 0, y: 0.88, w: 1, h: 0.12 }],
   createSonifier: createPlaceholderSonifier,
 };
 
