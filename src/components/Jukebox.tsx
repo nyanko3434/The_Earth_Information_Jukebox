@@ -3,6 +3,8 @@ import { createEngine } from '../audio/engine.ts'
 import type { Engine } from '../audio/engine.ts'
 import type { TrackDef } from '../types.ts'
 import { Announcer } from '../a11y/Announcer.tsx'
+import { Legend } from './Legend.tsx'
+import { NowHearing } from './NowHearing.tsx'
 import { Player } from './Player.tsx'
 import { TrackList } from './TrackList.tsx'
 
@@ -11,6 +13,8 @@ interface JukeboxProps {
 }
 
 const DESCRIPTION_ID = 'track-description'
+/** The "what you are hearing" sentence changes at most this often, so it can be read. */
+const HEARING_INTERVAL_MS = 500
 
 export function Jukebox({ tracks }: JukeboxProps) {
   const [selectedId, setSelectedId] = useState(tracks[0]?.id ?? '')
@@ -18,6 +22,9 @@ export function Jukebox({ tracks }: JukeboxProps) {
   const [message, setMessage] = useState('')
   const videoRef = useRef<HTMLVideoElement>(null)
   const engineRef = useRef<Engine | null>(null)
+  // Also in state, so the legend (fixed for the life of an engine) renders once the engine exists.
+  const [engine, setEngine] = useState<Engine | null>(null)
+  const [hearing, setHearing] = useState('')
 
   const track = tracks.find((candidate) => candidate.id === selectedId) ?? tracks[0]
 
@@ -27,11 +34,22 @@ export function Jukebox({ tracks }: JukeboxProps) {
 
     const engine = createEngine({ video, track })
     engineRef.current = engine
+    setEngine(engine)
     setIsPlaying(false)
+    setHearing('')
+
+    let lastHearing = 0
+    const stopFeatures = engine.onFeatures((features) => {
+      const at = performance.now()
+      if (at - lastHearing < HEARING_INTERVAL_MS) return
+      lastHearing = at
+      setHearing(engine.describeNow(features) ?? '')
+    })
 
     const syncPlayState = () => {
       const playing = !video.paused && !video.ended
       setIsPlaying(playing)
+      if (!playing) setHearing('')
       setMessage(`${track.title}: ${playing ? 'playing' : 'paused'}`)
     }
 
@@ -43,8 +61,10 @@ export function Jukebox({ tracks }: JukeboxProps) {
       video.removeEventListener('play', syncPlayState)
       video.removeEventListener('pause', syncPlayState)
       video.removeEventListener('ended', syncPlayState)
+      stopFeatures()
       engine.dispose()
       engineRef.current = null
+      setEngine(null)
     }
   }, [track])
 
@@ -121,6 +141,7 @@ export function Jukebox({ tracks }: JukeboxProps) {
           onToggle={toggle}
           descriptionId={DESCRIPTION_ID}
         />
+        <NowHearing text={hearing} />
         <p id={DESCRIPTION_ID}>{track.description}</p>
         <h3>Listen for</h3>
         <ul className="listen-for">
@@ -128,6 +149,7 @@ export function Jukebox({ tracks }: JukeboxProps) {
             <li key={line}>{line}</li>
           ))}
         </ul>
+        <Legend items={engine?.legend ?? []} />
         <p className="credit">{track.credit}</p>
         <p>
           <a href={track.sourceUrl} target="_blank" rel="noreferrer">

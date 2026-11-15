@@ -65,7 +65,7 @@ media (video or still) -> FrameSource -> Analyser -> Sonifier (one per track) ->
 ```
 
 - A shared engine (`src/analysis/`, `src/audio/`) reads frames; each track under `src/tracks/<id>/` supplies its own `track.ts` (metadata) and `sonifier.ts` (mapping).
-- The UI starts and stops all of this through one call, `createEngine({ video, track })` in `src/audio/engine.ts`, which returns `play()`, `pause()`, `onFeatures()`, `dispose()` and `legend`, the list the Legend component renders (ARCHITECTURE, "Engine API" and "Legend").
+- The UI starts and stops all of this through one call, `createEngine({ video, track })` in `src/audio/engine.ts`, which returns `play()`, `pause()`, `onFeatures()`, `describeNow()`, `dispose()` and `legend`, the list the Legend component renders (ARCHITECTURE, "Engine API" and "Legend").
 - The UI reads the same `FrameFeatures` as the sonifier to drive the "what you're hearing" panel.
 - `src/types.ts` (`FrameFeatures`, `Sonifier`, `TrackDef`, `MediaDef`) is the only contract between the sound half and the UI half. Copy it exactly from ARCHITECTURE.md; derived values go in `src/analysis/helpers.ts`, not into `FrameFeatures`.
 - Tracks 1–3 (lightning, ocean, night lights) are videos. Track 4 (aerosols) is a stretch goal: a still image with a playhead sweeping left to right (`scanX`).

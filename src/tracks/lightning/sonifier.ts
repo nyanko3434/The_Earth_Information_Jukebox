@@ -179,10 +179,16 @@ export function createLightningSonifier(output: ToneAudioNode, options: Lightnin
   // The legend's own voice, built the first time a legend button is pressed.
   let legendVoice: (Voice & { gain: Gain }) | null = null;
 
+  // The notes of the last second or so, for describeNow.
+  let recent: LightningNote[] = [];
+
   const playNote = (x: number, y: number, strength: number, time: number) => {
     const voice = voices[nextVoice];
     nextVoice = (nextVoice + 1) % voices.length;
     const note = noteFor(x, y, strength, time);
+    recent.push(note);
+    // Bounded even if nobody asks for a description (the cap is 12 notes a second).
+    if (recent.length > 32) recent.shift();
     const at = now();
     voice.panner.pan.setValueAtTime(note.pan, at);
     voice.synth.triggerAttackRelease(note.hz, NOTE_SECONDS, at, note.velocity);
@@ -276,6 +282,17 @@ export function createLightningSonifier(output: ToneAudioNode, options: Lightnin
     },
 
     describeNow(f: FrameFeatures) {
+      if (out && !silent) {
+        // While it sounds: the notes of the last second, so the sentence is what was just heard.
+        recent = recent.filter((note) => note.time <= f.time && note.time > f.time - 1);
+        if (recent.length === 0) return 'No new lightning in the last second.';
+        const latest = recent[recent.length - 1];
+        const where = describePlace(latest.x, latest.y);
+        return recent.length === 1
+          ? `One flash in the last second, ${where}.`
+          : `${recent.length} flashes in the last second, the latest ${where}.`;
+      }
+      // Before the sound has started: this frame alone.
       const flashes = detect(f);
       if (flashes.length === 0) return 'No new lightning right now.';
       const where = describePlace(flashes[0].x, flashes[0].y);

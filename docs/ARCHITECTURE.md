@@ -131,6 +131,7 @@ export interface Engine {
   play(): Promise<void>;  // call inside the Play click: unlocks audio, starts the sonifier, plays the video
   pause(): void;          // pauses the video; sound is silent within 200 ms
   onFeatures(cb: (f: FrameFeatures) => void): () => void; // every analysed frame; returns unsubscribe
+  describeNow(f: FrameFeatures): string | undefined; // one sentence on what that frame sounds like (see below)
   dispose(): void;        // on track change or unmount
   readonly legend: LegendItem[]; // the track's audio legend; can be listed before Play (see "Legend")
 }
@@ -160,6 +161,7 @@ The lightning track uses `createSonifier: (output) => createLightningSonifier(ou
 - One engine per track. On a track change, dispose the old engine and create a new one. If the video is already playing at that moment, call `play()` on the new engine, because the video's `play` event will not fire again.
 - `onFeatures` fires only while the video is playing, including when audio has not been unlocked.
 - No sound is possible before the first gesture. `createEngine` builds the master bus (four nodes) and creates the sonifier object, so that the legend can be listed, but they sit on Tone's suspended context; the sonifier's own nodes are built in its `start()`, on the first Play or legend press. Chrome still logs "The AudioContext was not allowed to start" at page load, because importing Tone creates that suspended context; that is expected, and the first gesture resumes it.
+- `describeNow(f)` passes a frame to the sonifier's own `describeNow` and returns its sentence, so the UI never touches the sonifier. The shell calls it from an `onFeatures` callback at most twice a second and shows the sentence in the `NowHearing` panel, which is plain text and not a live region; the sentence is cleared when the picture pauses. The lightning sentence counts the notes of the last second, so it reads steadily at that rate.
 - Video only for now. Still images (`scanX`) are added to the same function if Track 4 is built.
 
 ### Legend

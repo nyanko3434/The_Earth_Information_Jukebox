@@ -151,6 +151,11 @@ button[aria-current='true'] {
   margin: 0;
 }
 
+/* Room for two lines, so the page below does not jump as the sentence changes. */
+.now-hearing p {
+  min-height: 3.2em;
+}
+
 .credit {
   font-size: 0.9rem;
 }
