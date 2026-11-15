@@ -49,6 +49,7 @@ TypeScript settings from the template that reject otherwise ordinary code (`tsco
 | `docs/BUILD_PLAN.md` | Build order with a "done when" check per step, feature freeze, and the order in which to cut scope |
 | `docs/WORK_DIVISION.md` | Which teammate owns which paths |
 | `docs/SUBMISSION.md` | Submission form fields, resource lists, AI-use rules |
+| `docs/PICTURE_TO_SOUND.md` | Plain-language explanation of what in each picture drives what in the sound; the source for the README's mapping table. Update it when a sonifier's mapping changes |
 | `docs/PROJECT_LOG.md` | Dated record of work done, decisions and changes; read the latest entries to see where the project stands |
 
 ## What is being built

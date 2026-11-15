@@ -125,6 +125,8 @@ A's entries from Step 2 on. A adds new entries at the end of this section, above
 - **Problem (minor):** a note waits for the next strike, so after a hard cut in a picture the old chord can last up to 4 s. The ocean clip has no cuts, and a seek strikes at once.
 - Note: `b/ignore-rects` was not yet merged when this was written, so the checks ran on a copy of its `ocean.mp4` taken from the git object into the git-ignored `src/analysis/dev/ocean.mp4`, with no `ignore` rectangle. The sonifier does not depend on that rectangle (its regions stop above the colorbar). `?clip=media/ocean.mp4` builds the right URL but has not loaded a file yet, because `public/media/` is not on this branch.
 - Docs updated: ARCHITECTURE (folder layout, helper list, Engine API, dev harness, audio rules), CLAUDE.md (harness paragraph, the pan and pitch rule), BUILD_PLAN (A's line).
+- 12:05 — `origin/b/ignore-rects` merged into `a/ocean-sonifier` by A, so the branch now has `public/media/ocean.mp4` and the ocean `ignore` rectangle. A listened to the ocean sonifier on the real clip and found it fine; no constant was changed. This is the first listening recorded in this log. Still unheard: lightning on real footage (there is no clip), and B has not listened to the ocean track.
+- 12:05 — `docs/PICTURE_TO_SOUND.md` added: a plain-language account of how a frame becomes sound, with a table per track of what in the picture drives what in the sound (lightning and ocean; night lights is marked as not written). It is meant for explaining the project and as the source for the README's mapping table in Step 7. Listed in CLAUDE.md's docs table. It must be updated when a mapping changes.
 
 ### Handoff: A's next session
 
@@ -139,14 +141,15 @@ What exists on A's side:
 
 What A still owes, in the order to do it:
 
-1. **Listen to the ocean track** on headphones and on laptop speakers, with `?clip=media/ocean.mp4&sonifier=ocean` once `b/ignore-rects` is in, and adjust the constants at the top of its sonifier.
+1. **Ocean track:** A has listened and found it fine. Still to do: B listens, and a check on laptop speakers (the tropical voices are as low as 110 Hz). The harness URL is `?clip=media/ocean.mp4&sonifier=ocean`.
 2. **Step 5:** legend items for lightning and ocean (`legend` is empty in both). The engine does not yet give the UI the sonifier, so how the Legend component reaches `legend`, and how a legend sound plays before Play has been pressed, has to be agreed with B first.
 3. **Lightning (Step 2):** tune the constants at the top of the sonifier once real footage exists. No lightning clip is in the repo yet.
 4. **Step 6:** volume balance across tracks, audio bugs, Chrome and Firefox. Feature freeze is at the end of Step 6. **Step 7:** the mapping table and technical write-up for the README (B leads the README).
 
 Not code, still open:
 
-- Nobody has listened to anything yet. Every check so far measured the signal in headless Chrome.
+- Only the ocean track has been listened to, and only by A. Every other check measured the signal in headless Chrome.
+- `docs/PICTURE_TO_SOUND.md` is the draft of the README's mapping table and technical write-up (Step 7); the night lights section is empty until B writes that sonifier.
 - The sonifier lifecycle sentence in ARCHITECTURE is still marked as awaiting B's agreement.
 - To raise with B: switch the ocean `track.ts` to `createSonifier: (output) => createOceanSonifier(output)` (it still uses the placeholder, so the deployed ocean track is silent); switch the lightning `track.ts` to `createLightningSonifier`; the ocean track's pitch exception, and that left and right are the west and east halves of the map (worth a "listen for" bullet); the shell and the lightning clip (see the problem above); the per-teammate progress line.
 
