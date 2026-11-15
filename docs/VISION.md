@@ -38,7 +38,7 @@ Every step works with a keyboard and a screen reader.
 
 | # | Track | Source | What we read from the frames | What you hear |
 |---|---|---|---|---|
-| 1 | Lightning from the ISS | Video, [SVS 5011](https://svs.gsfc.nasa.gov/5011/) | Sudden bright flashes and where they are | Short plucked notes: pitch from height in the picture (north is up), left/right from position in the picture, loudness from flash size. The clip is a turning globe, not a flat map |
+| 1 | Lightning from the ISS | Video, [SVS 5011](https://svs.gsfc.nasa.gov/5011/) | Sudden bright flashes and where they are | Short plucked notes: pitch from height in the picture (north is up), left/right from position in the picture, loudness from flash size. The clip is a turning globe, not a flat map. Three clips of this visualization are offered: the opening along the orbit, 2017 to 2018, and 2021 to 2023 |
 | 2 | Sea surface currents and temperature | Video, [SVS 3912](https://svs.gsfc.nasa.gov/3912/) | Colour (temperature) per region, amount of movement | Slow chords: warm water is lower and fuller, cold water is higher and thinner, movement adds shimmer |
 | 3 | Night lights 2012–2023 | Video, [SVS 5313](https://svs.gsfc.nasa.gov/5313/) | Brightness and how it changes | A pattern of notes that gets denser and faster as the map gets brighter |
 | 4 (stretch) | GEOS aerosols | Still image, [SVS 5669](https://svs.gsfc.nasa.gov/5669/) | Four colours: sea salt (blue), dust (pink), smoke (orange/red), sulfates (green) | A playhead sweeps across the map; each aerosol type is its own instrument |
@@ -50,6 +50,7 @@ Track 4 is a stretch goal because its source is a single still image, so it need
 **Committed**
 
 - Three tracks (1–3), each with its own ruleset.
+- Added on 2026-11-15: two more clips of Track 1, played by the same ruleset (five entries in the track list), and listening to one part of the picture, chosen with buttons or by dragging a rectangle on it.
 - Jukebox interface: track list, player, description, audio legend, "what you're hearing" panel.
 - Keyboard and screen-reader support throughout.
 - Public deployed site, public repository, 30-second demo video.

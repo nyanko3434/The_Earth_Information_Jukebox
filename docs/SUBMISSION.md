@@ -32,7 +32,7 @@ Earth Jukebox is a web jukebox for NASA Earth Information Center visualizations:
 
 ```text
 WHAT IT DOES
-Earth Jukebox is a static website. The visitor picks one of three Earth Information Center visualizations (lightning seen from the International Space Station, sea surface currents and temperature, change in night lights), learns the sounds from an audio legend, and presses Play. The picture and a soundscape made from it run together; pausing the picture silences the sound.
+Earth Jukebox is a static website. The visitor picks one of five clips from three Earth Information Center visualizations (lightning seen from the International Space Station, in three parts; sea surface currents and temperature; change in night lights), learns the sounds from an audio legend, and presses Play. The visitor can also choose one part of the picture, with buttons or by dragging a rectangle on it, and hear only that part. The picture and a soundscape made from it run together; pausing the picture silences the sound.
 
 HOW IT WORKS
 The video is drawn to a hidden canvas of 64 by 32 cells about 20 times a second. Overlays such as dates and colour bars are blanked first. For every cell the app measures brightness, hue, saturation and change since the last frame. Each track has its own rules:

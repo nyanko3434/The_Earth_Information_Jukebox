@@ -52,11 +52,11 @@ src/
     scales.ts            pitch quantising (pentatonic by default)
   tracks/
     index.ts             list of TrackDef
-    lightning/           track.ts (metadata) + sonifier.ts
+    lightning/           track.ts (metadata for three clips of SVS 5011) + sonifier.ts
     ocean/
     nightlights/
     aerosols/            stretch
-  components/            Jukebox, TrackList, Player, Legend, NowHearing, About
+  components/            Jukebox, TrackList, Player, Legend, NowHearing, RegionPicker (+ regions.ts, its presets), About
   a11y/                  live-region announcer, keyboard shortcuts
 docs/                    these planning files
 ```
@@ -132,6 +132,7 @@ export interface Engine {
   pause(): void;          // pauses the video; sound is silent within 200 ms
   onFeatures(cb: (f: FrameFeatures) => void): () => void; // every analysed frame; returns unsubscribe
   describeNow(f: FrameFeatures): string | undefined; // one sentence on what that frame sounds like (see below)
+  setRegion(region: Rect | null): void; // listen to one rectangle of the picture; null is the whole picture (see below)
   dispose(): void;        // on track change or unmount
   readonly legend: LegendItem[]; // the track's audio legend; can be listed before Play (see "Legend")
 }
@@ -162,6 +163,7 @@ The lightning track uses `createSonifier: (output) => createLightningSonifier(ou
 - `onFeatures` fires only while the video is playing, including when audio has not been unlocked.
 - No sound is possible before the first gesture. `createEngine` builds the master bus (four nodes) and creates the sonifier object, so that the legend can be listed, but they sit on Tone's suspended context; the sonifier's own nodes are built in its `start()`, on the first Play or legend press. Chrome still logs "The AudioContext was not allowed to start" at page load, because importing Tone creates that suspended context; that is expected, and the first gesture resumes it.
 - `describeNow(f)` passes a frame to the sonifier's own `describeNow` and returns its sentence, so the UI never touches the sonifier. The shell calls it from an `onFeatures` callback at most twice a second and shows the sentence in the `NowHearing` panel, which is plain text and not a live region; the sentence is cleared when the picture pauses. The lightning sentence counts the notes of the last second, so it reads steadily at that rate.
+- `setRegion(rect)` limits the sound to one rectangle of the picture (0..1 of its width and height, like an `ignore` rectangle). The FrameSource blanks everything outside it to black, snapped outward to whole cells, so the sonifiers need no change: a black cell is already "nothing here" to all three, and a cell keeps its place in the grid, so pan and pitch mean what they did. On a change the engine resets the Analyser and calls the sonifier's `pause()`, so that what comes into the area is not heard as a change in the picture; the next frame resumes the sound (the lightning sonifier forgets its last frame in `pause()` for this reason). It can be called while playing or paused, and a new engine starts on the whole picture. In the shell, `RegionPicker` offers six buttons with `aria-pressed` (whole picture, the four halves, the centre) and a line of text naming the area; `Player` lets a pointer user drag a rectangle on the picture and draws the chosen area as an outline with the rest dimmed. The buttons are the keyboard and screen reader route; a drawn rectangle under 0.16 of the width or 0.1 of the height is ignored (narrower than 0.15, the night lights sonifier would take it for a zoomed view). Each change is announced once through the live region.
 - Video only for now. Still images (`scanX`) are added to the same function if Track 4 is built.
 
 ### Legend
@@ -176,7 +178,7 @@ Added by A on 2026-11-15. It adds the `legend` member above and changes nothing 
 
 ### Dev harness
 
-`src/analysis/dev/harness.html` runs the pipeline through `createEngine` without the UI shell, and shows the features the Analyser reports, the notes the lightning sonifier plays, what each of the ocean sonifier's six voices is doing, the output level at the left and right speaker, and each sonifier's `describeNow` sentence. Its "Legend" row has one button per item of `engine.legend`, wired the way the shell should wire them, so legend sounds can be heard and measured before Play and without the UI shell. A select switches between the test tone, the lightning sonifier and the ocean sonifier. The lightning and ocean sonifiers are run with the `ignore` rectangles from their own `track.ts`, so the harness blanks what the site blanks; `?ignore=off` in the URL turns the blanking off. A check script can set `window.harnessFrame` to be given every analysed frame. With `npm run dev` it is at <http://localhost:5173/The_Earth_Information_Jukebox/src/analysis/dev/harness.html>. It is not linked from `index.html`, so it is left out of the build. Every `.mp4` in `src/analysis/dev/` is git-ignored. `bash src/analysis/dev/make-clips.sh` generates three synthetic ffmpeg test clips there, and its header says what each contains and should sound like: `standin.mp4` (brightness sweep, moving square, colour bars; for the test tone), `flashes.mp4` (yellow flashes at known places and times on a static map, and one white flash that must stay silent; for the lightning sonifier) and `oceantest.mp4` (warm and cold halves that swap, then movement on one side only; for the ocean sonifier). The page loads `standin.mp4` unless the URL says otherwise: `?clip=flashes.mp4&sonifier=lightning`. A deployed clip is loaded from `public/media/` with `?clip=media/ocean.mp4&sonifier=ocean`. A local cut of real footage can be kept in the same folder and loaded with `?clip=`, or any file can be loaded with the page's file picker.
+`src/analysis/dev/harness.html` runs the pipeline through `createEngine` without the UI shell, and shows the features the Analyser reports, the notes the lightning sonifier plays, what each of the ocean sonifier's six voices is doing, the output level at the left and right speaker, and each sonifier's `describeNow` sentence. Its "Legend" row has one button per item of `engine.legend`, wired the way the shell should wire them, so legend sounds can be heard and measured before Play and without the UI shell. A select switches between the test tone, the lightning sonifier and the ocean sonifier. The lightning and ocean sonifiers are run with the `ignore` rectangles from their own `track.ts`, so the harness blanks what the site blanks; `?ignore=off` in the URL turns the blanking off. `?region=x,y,w,h` (0..1) calls `engine.setRegion` with that rectangle. A check script can set `window.harnessFrame` to be given every analysed frame. With `npm run dev` it is at <http://localhost:5173/The_Earth_Information_Jukebox/src/analysis/dev/harness.html>. It is not linked from `index.html`, so it is left out of the build. Every `.mp4` in `src/analysis/dev/` is git-ignored. `bash src/analysis/dev/make-clips.sh` generates three synthetic ffmpeg test clips there, and its header says what each contains and should sound like: `standin.mp4` (brightness sweep, moving square, colour bars; for the test tone), `flashes.mp4` (yellow flashes at known places and times on a static map, and one white flash that must stay silent; for the lightning sonifier) and `oceantest.mp4` (warm and cold halves that swap, then movement on one side only; for the ocean sonifier). The page loads `standin.mp4` unless the URL says otherwise: `?clip=flashes.mp4&sonifier=lightning`. A deployed clip is loaded from `public/media/` with `?clip=media/ocean.mp4&sonifier=ocean`. A local cut of real footage can be kept in the same folder and loaded with `?clip=`, or any file can be loaded with the page's file picker.
 
 ## Analysis rules
 
@@ -186,6 +188,7 @@ Added by A on 2026-11-15. It adds the `legend` member above and changes nothing 
 - Draw frames to a canvas no larger than 96x48. Create the 2D context with `willReadFrequently: true`.
 - Use `requestVideoFrameCallback` where available, `requestAnimationFrame` otherwise. Throttle analysis to about 20 Hz.
 - Blank out `ignore` rectangles before computing features, or on-screen dates and colorbars will be turned into sound. Blanked cells are black: luma 0, and they count as black in `meanLuma`.
+- An area chosen by the visitor (`engine.setRegion`) is applied the same way: every cell outside it is blanked to black before the features are computed.
 - Media must be served from our own origin. Reading pixels from a cross-origin video fails in the browser.
 - For still images, `scanX` advances from 0 to 1 over `scanSeconds`, and the UI draws a vertical line at that position.
 

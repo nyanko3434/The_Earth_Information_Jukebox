@@ -28,6 +28,9 @@ export class FrameSource {
   private handler: FrameHandler | null = null;
   private handle = 0;
   private nextDue = 0;
+  private readonly cols: number;
+  private readonly rows: number;
+  private region: Rect | null = null;
 
   constructor(
     video: HTMLVideoElement,
@@ -43,6 +46,8 @@ export class FrameSource {
     }
     this.video = video;
     this.ignore = ignore;
+    this.cols = cols;
+    this.rows = rows;
     this.scale = Math.min(Math.floor(MAX_WIDTH / cols), Math.floor(MAX_HEIGHT / rows));
 
     this.canvas = document.createElement('canvas');
@@ -71,7 +76,28 @@ export class FrameSource {
       const y1 = Math.ceil((r.y + r.h) * height);
       this.ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
     }
+    const region = this.region;
+    if (region) {
+      // Snapped outward to whole cells, so no cell is half darkened.
+      const { cols, rows, scale } = this;
+      const x0 = Math.max(0, Math.floor(region.x * cols)) * scale;
+      const y0 = Math.max(0, Math.floor(region.y * rows)) * scale;
+      const x1 = Math.min(cols, Math.ceil((region.x + region.w) * cols)) * scale;
+      const y1 = Math.min(rows, Math.ceil((region.y + region.h) * rows)) * scale;
+      this.ctx.fillRect(0, 0, width, y0);
+      this.ctx.fillRect(0, y1, width, height - y1);
+      this.ctx.fillRect(0, y0, x0, y1 - y0);
+      this.ctx.fillRect(x1, y0, width - x1, y1 - y0);
+    }
     return this.ctx.getImageData(0, 0, width, height);
+  }
+
+  /**
+   * Limits analysis to one rectangle of the picture (0..1, like an ignore
+   * rectangle); everything outside it is blanked to black. Null is the whole picture.
+   */
+  setRegion(region: Rect | null): void {
+    this.region = region;
   }
 
   /** Starts the frame loop. `time` passed to the handler is seconds into the media. */

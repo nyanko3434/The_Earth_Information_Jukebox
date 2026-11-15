@@ -4,7 +4,7 @@
 import { start as startAudio } from 'tone';
 import { Analyser } from '../analysis/analyser.ts';
 import { FrameSource } from '../analysis/frameSource.ts';
-import type { FrameFeatures, LegendItem, TrackDef } from '../types.ts';
+import type { FrameFeatures, LegendItem, Rect, TrackDef } from '../types.ts';
 import { getMasterBus, setMasterAudible } from './master.ts';
 
 /** With no analysed frame for this long while playing, the sound is paused (stall, hidden tab). */
@@ -29,6 +29,12 @@ export interface Engine {
    * most a few times a second. Undefined if the track has no such sentence.
    */
   describeNow(f: FrameFeatures): string | undefined;
+  /**
+   * Listen to one rectangle of the picture (0..1 of its width and height); the
+   * rest is treated as black, as an ignore rectangle is. Null is the whole
+   * picture. May be called at any time, playing or paused.
+   */
+  setRegion(region: Rect | null): void;
   /** Call on track change or unmount. The engine cannot be used afterwards. */
   dispose(): void;
   /**
@@ -145,6 +151,16 @@ export function createEngine({ video, track }: EngineOptions): Engine {
 
     describeNow(f) {
       return disposed ? undefined : sonifier.describeNow?.(f);
+    },
+
+    setRegion(region) {
+      if (disposed) return;
+      source.setRegion(region);
+      // What comes into or goes out of the area is not a change in the picture:
+      // the analyser forgets its last frame, and the sonifier is paused so that
+      // it starts afresh on the next frame, as it does after Pause.
+      analyser.reset();
+      if (started) sonifier.pause();
     },
 
     onFeatures(cb) {
