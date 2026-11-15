@@ -6,6 +6,7 @@ import type { Engine } from '../../audio/engine.ts';
 import { createTestTone, testToneHz, testTonePan } from '../../audio/testTone.ts';
 import { createLightningSonifier } from '../../tracks/lightning/sonifier.ts';
 import type { LightningNote } from '../../tracks/lightning/sonifier.ts';
+import { lightningTrack } from '../../tracks/lightning/track.ts';
 import { createOceanSonifier } from '../../tracks/ocean/sonifier.ts';
 import type { OceanUpdate } from '../../tracks/ocean/sonifier.ts';
 import { oceanTrack } from '../../tracks/ocean/track.ts';
@@ -21,6 +22,8 @@ declare global {
     harnessLevels: (samples?: number) => [number, number];
     /** The last 2048 samples at each speaker, for measuring pitch. Null before the first button press. */
     harnessWave: () => { sampleRate: number; left: number[]; right: number[] } | null;
+    /** Set from the console or a check script to be given every analysed frame, after the sonifier has had it. */
+    harnessFrame?: (f: FrameFeatures) => void;
   }
 }
 
@@ -188,6 +191,7 @@ function onFeatures(f: FrameFeatures) {
   out.noteRate.textContent = isTone ? '-' : String(countRecent(recentNotes, now));
   out.describe.textContent = sonifier?.describeNow?.(f) ?? '-';
   for (const draw of views) draw(f);
+  window.harnessFrame?.(f);
 }
 
 // ---- The part the UI shell will repeat ----
@@ -203,9 +207,11 @@ function buildEngine() {
   out.lastNote.textContent = '-';
   out.voices.textContent = '-';
   const kind = sonifierSelect.value;
-  // The ocean sonifier is run with the ocean track's own ignore rectangles
-  // (B's track.ts), so the harness blanks what the site will blank.
-  const ignore: Rect[] = kind === 'ocean' ? (oceanTrack.ignore ?? []) : [];
+  // The lightning and ocean sonifiers are run with their track's own ignore
+  // rectangles (B's track.ts), so the harness blanks what the site blanks.
+  // `?ignore=off` turns that off, to see what an overlay would have sounded like.
+  const tracked = kind === 'ocean' ? oceanTrack.ignore : kind === 'lightning' ? lightningTrack.ignore : undefined;
+  const ignore: Rect[] = params.get('ignore') === 'off' ? [] : (tracked ?? []);
   engine = createEngine({
     video,
     track: {

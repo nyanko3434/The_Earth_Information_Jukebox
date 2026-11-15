@@ -10,6 +10,8 @@
     ?clip=flashes.mp4       which clip in this folder to load (default standin.mp4)
     ?clip=media/ocean.mp4   or a deployed clip from public/media/
     ?sonifier=lightning     which sonifier to start with: tone (default), lightning or ocean
+    ?ignore=off             do not blank the track's ignore rectangles (lightning and ocean
+                            are otherwise run with the ones in their track.ts)
 
   Clips in this folder are git-ignored. Generate the three synthetic ones with:
     bash src/analysis/dev/make-clips.sh
